@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     NOTIFICATION_EMAIL: str = ""
 
+    def get_connect_args(self, url: str) -> dict:
+        """Dynamically generate connection arguments based on database URL host."""
+        connect_args = {}
+        # If it's a remote cloud database (not localhost), enforce SSL connection
+        if url and "localhost" not in url and "127.0.0.1" not in url:
+            connect_args["ssl"] = True
+        return connect_args
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",

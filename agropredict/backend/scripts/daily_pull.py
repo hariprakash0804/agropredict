@@ -58,7 +58,11 @@ def main():
 
     # Create sync engine
     settings = get_settings()
-    engine = create_engine(settings.SYNC_DATABASE_URL, echo=False)
+    engine = create_engine(
+        settings.SYNC_DATABASE_URL,
+        echo=False,
+        connect_args=settings.get_connect_args(settings.SYNC_DATABASE_URL)
+    )
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
 

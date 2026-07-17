@@ -27,7 +27,11 @@ def daily_data_ingestion_job():
     logger.info("Executing scheduled daily data ingestion job...")
     
     settings = get_settings()
-    engine = create_engine(settings.SYNC_DATABASE_URL, echo=False)
+    engine = create_engine(
+        settings.SYNC_DATABASE_URL,
+        echo=False,
+        connect_args=settings.get_connect_args(settings.SYNC_DATABASE_URL)
+    )
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
     

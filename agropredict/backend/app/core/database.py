@@ -20,6 +20,7 @@ engine = create_async_engine(
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
+    connect_args=settings.get_connect_args(settings.DATABASE_URL),
 )
 
 # Session factory

@@ -30,7 +30,11 @@ def compute_metrics(y_true: float, y_pred: float) -> tuple[float, float, float]:
 
 def evaluate_accuracy():
     settings = get_settings()
-    engine = create_engine(settings.SYNC_DATABASE_URL, echo=False)
+    engine = create_engine(
+        settings.SYNC_DATABASE_URL,
+        echo=False,
+        connect_args=settings.get_connect_args(settings.SYNC_DATABASE_URL)
+    )
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
     
