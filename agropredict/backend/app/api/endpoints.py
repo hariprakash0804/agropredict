@@ -531,7 +531,11 @@ async def get_forecast(
     forecast_dates = future_weather_df["date"].tolist()
     
     if model_winner == "chronos":
-        # Load Chronos-2 forecaster from application state
+        # Lazy load Chronos-2 forecaster from application state
+        if not hasattr(request.app.state, "chronos_forecaster"):
+            print("Lazy loading Chronos2Forecaster...")
+            from app.forecasting.chronos_forecaster import Chronos2Forecaster
+            request.app.state.chronos_forecaster = Chronos2Forecaster()
         forecaster = request.app.state.chronos_forecaster
         forecasts = forecaster.forecast(
             history_df=merged_history,

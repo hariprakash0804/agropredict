@@ -21,11 +21,6 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     # Startup
-    print("[AgroPredict] Loading Chronos-2 Pipeline...")
-    from app.forecasting.chronos_forecaster import Chronos2Forecaster
-    app.state.chronos_forecaster = Chronos2Forecaster()
-    print("[AgroPredict] Chronos-2 Pipeline loaded successfully.")
-    
     print("[AgroPredict] Starting background scheduler...")
     from app.services.scheduler import start_scheduler, shutdown_scheduler
     start_scheduler()
