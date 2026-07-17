@@ -10,7 +10,7 @@ aiomysql==0.2.0
 PyMySQL==1.1.1
 
 # Redis
-redis[hiredis]==5.2.1
+redis==5.2.1
 
 # Settings management
 pydantic-settings==2.7.1
