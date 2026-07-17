@@ -46,10 +46,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Configure CORS origins dynamically
+cors_origins = ["http://localhost:3000"]
+if settings.FRONTEND_URL:
+    clean_origin = settings.FRONTEND_URL.strip().rstrip("/")
+    cors_origins.extend([clean_origin, f"{clean_origin}/"])
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

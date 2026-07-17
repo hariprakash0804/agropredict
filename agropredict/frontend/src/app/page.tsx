@@ -63,7 +63,16 @@ interface AccuracyObs {
   mape: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+// Normalize API URL to ensure it always ends with /api
+const getApiUrl = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  url = url.trim().replace(/\/+$/, ""); // remove trailing slashes
+  if (!url.endsWith("/api")) {
+    url += "/api";
+  }
+  return url;
+};
+const API_BASE_URL = getApiUrl();
 
 export default function Home() {
   const [commodities, setCommodities] = useState<{ id: number; name: string; slug: string }[]>([]);
