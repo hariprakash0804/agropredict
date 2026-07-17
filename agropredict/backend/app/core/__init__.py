@@ -1,0 +1,1 @@
+"""AgroPredict Backend - Core package"""
