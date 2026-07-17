@@ -28,7 +28,7 @@ class Chronos2Forecaster:
         self.pipeline = Chronos2Pipeline.from_pretrained(
             self.model_name,
             device_map="cpu",
-            torch_dtype=torch.float32
+            torch_dtype=torch.bfloat16
         )
         # Identify indices for key quantiles
         self.q_indices = {
