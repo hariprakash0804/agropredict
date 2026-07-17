@@ -21,6 +21,13 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     # Startup
+    print("[AgroPredict] Ensuring database tables exist...")
+    from app.core.database import engine
+    from app.models.commodity import Base, User, UserQueryLog, Commodity, Mandi, PriceObservation, WeatherObservation, ForecastAccuracy
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("[AgroPredict] Database tables verified.")
+
     print("[AgroPredict] Starting background scheduler...")
     from app.services.scheduler import start_scheduler, shutdown_scheduler
     start_scheduler()
