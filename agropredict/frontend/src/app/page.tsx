@@ -63,6 +63,8 @@ interface AccuracyObs {
   mape: number;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 export default function Home() {
   const [commodities, setCommodities] = useState<{ id: number; name: string; slug: string }[]>([]);
   const [mandis, setMandis] = useState<{ id: number; name: string; state: string; district: string }[]>([]);
@@ -107,7 +109,7 @@ export default function Home() {
   // Load user query history
   const fetchUserHistory = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/logs`);
+      const res = await fetch(`${API_BASE_URL}/users/${userId}/logs`);
       if (res.ok) {
         const data = await res.json();
         setSavedQueries(data);
@@ -134,7 +136,7 @@ export default function Home() {
 
     const path = authMode === "login" ? "login" : "register";
     try {
-      const res = await fetch(`http://localhost:8000/api/auth/${path}`, {
+      const res = await fetch(`${API_BASE_URL}/auth/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: authUsername, password: authPassword })
@@ -154,7 +156,7 @@ export default function Home() {
         // Success register -> auto login
         setAuthMode("login");
         // Trigger login request
-        const loginRes = await fetch("http://localhost:8000/api/auth/login", {
+        const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username: authUsername, password: authPassword })
@@ -239,7 +241,7 @@ export default function Home() {
         mandi: mandiName,
       };
 
-      const res = await fetch("http://localhost:8000/api/chat", {
+      const res = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -359,8 +361,8 @@ export default function Home() {
     async function init() {
       try {
         const [cRes, mRes] = await Promise.all([
-          fetch("http://localhost:8000/api/commodities"),
-          fetch("http://localhost:8000/api/mandis"),
+          fetch(`${API_BASE_URL}/commodities`),
+          fetch(`${API_BASE_URL}/mandis`),
         ]);
         if (!cRes.ok || !mRes.ok) throw new Error("Failed to load metadata");
         const cData = await cRes.json();
@@ -404,9 +406,9 @@ export default function Home() {
       });
 
       const [histRes, foreRes, accRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/history/${commSlug}/${mandiVal}?${urlParams.toString()}`),
-        fetch(`http://localhost:8000/api/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}`),
-        fetch(`http://localhost:8000/api/accuracy/${commSlug}?horizon=${horizon}`),
+        fetch(`${API_BASE_URL}/history/${commSlug}/${mandiVal}?${urlParams.toString()}`),
+        fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}`),
+        fetch(`${API_BASE_URL}/accuracy/${commSlug}?horizon=${horizon}`),
       ]);
 
       if (!histRes.ok || !foreRes.ok || !accRes.ok) {
@@ -428,7 +430,7 @@ export default function Home() {
       // Save search log to user history if logged in
       if (user) {
         try {
-          await fetch(`http://localhost:8000/api/users/${user.id}/logs`, {
+          await fetch(`${API_BASE_URL}/users/${user.id}/logs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
