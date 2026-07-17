@@ -287,25 +287,34 @@ async def get_history(
     comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
     commodity = comm_res.scalar_one_or_none()
     if not commodity:
-        commodity_name = commodity_slug.replace('-', ' ').title()
-        commodity = Commodity(name=commodity_name, slug=commodity_slug)
-        db.add(commodity)
-        await db.commit()
-        await db.refresh(commodity)
+        try:
+            commodity_name = commodity_slug.replace('-', ' ').title()
+            commodity = Commodity(name=commodity_name, slug=commodity_slug)
+            db.add(commodity)
+            await db.commit()
+            await db.refresh(commodity)
+        except Exception:
+            await db.rollback()
+            comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
+            commodity = comm_res.scalar_one()
         
     # 3. Get or create Mandi
     mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
     mandi = mandi_res.scalar_one_or_none()
     if not mandi:
-        # Geocode dynamically
-        lat, lon = await geocode_mandi(mandi_name)
-        mandi = Mandi(name=mandi_name, state=state, district=district, latitude=lat, longitude=lon)
-        db.add(mandi)
-        await db.commit()
-        await db.refresh(mandi)
-        
-        # Backfill weather observations for the new mandi dynamically
-        await backfill_weather_for_mandi(db, mandi.id, lat, lon, today - timedelta(days=365), today)
+        try:
+            # Geocode dynamically
+            lat, lon = await geocode_mandi(mandi_name)
+            mandi = Mandi(name=mandi_name, state=state, district=district, latitude=lat, longitude=lon)
+            db.add(mandi)
+            await db.commit()
+            await db.refresh(mandi)
+            # Backfill weather observations for the new mandi dynamically
+            await backfill_weather_for_mandi(db, mandi.id, lat, lon, today - timedelta(days=365), today)
+        except Exception:
+            await db.rollback()
+            mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
+            mandi = mandi_res.scalar_one()
 
     # 4. Fetch prices from DB
     prices_res = await db.execute(
@@ -436,25 +445,34 @@ async def get_forecast(
     comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
     commodity = comm_res.scalar_one_or_none()
     if not commodity:
-        commodity_name = commodity_slug.replace('-', ' ').title()
-        commodity = Commodity(name=commodity_name, slug=commodity_slug)
-        db.add(commodity)
-        await db.commit()
-        await db.refresh(commodity)
+        try:
+            commodity_name = commodity_slug.replace('-', ' ').title()
+            commodity = Commodity(name=commodity_name, slug=commodity_slug)
+            db.add(commodity)
+            await db.commit()
+            await db.refresh(commodity)
+        except Exception:
+            await db.rollback()
+            comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
+            commodity = comm_res.scalar_one()
         
     # 3. Get or create Mandi
     mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
     mandi = mandi_res.scalar_one_or_none()
     if not mandi:
-        # Geocode dynamically
-        lat, lon = await geocode_mandi(mandi_name)
-        mandi = Mandi(name=mandi_name, state=state, district=district, latitude=lat, longitude=lon)
-        db.add(mandi)
-        await db.commit()
-        await db.refresh(mandi)
-        
-        # Backfill weather observations for the new mandi dynamically
-        await backfill_weather_for_mandi(db, mandi.id, lat, lon, date.today() - timedelta(days=365), date.today())
+        try:
+            # Geocode dynamically
+            lat, lon = await geocode_mandi(mandi_name)
+            mandi = Mandi(name=mandi_name, state=state, district=district, latitude=lat, longitude=lon)
+            db.add(mandi)
+            await db.commit()
+            await db.refresh(mandi)
+            # Backfill weather observations for the new mandi dynamically
+            await backfill_weather_for_mandi(db, mandi.id, lat, lon, date.today() - timedelta(days=365), date.today())
+        except Exception:
+            await db.rollback()
+            mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
+            mandi = mandi_res.scalar_one()
         
     # 4. Fetch historical data (last 120 days to construct features/context)
     prices_res = await db.execute(
