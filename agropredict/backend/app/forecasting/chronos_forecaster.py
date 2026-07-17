@@ -15,6 +15,15 @@ from chronos import Chronos2Pipeline
 # pyrefly: ignore [missing-import]
 from chronos.chronos2.preprocess import from_data_frame
 
+try:
+    # pyrefly: ignore [missing-import]
+    import spaces  # type: ignore
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(func):
+            return func
+
 settings = get_settings()
 
 class Chronos2Forecaster:
@@ -25,9 +34,12 @@ class Chronos2Forecaster:
     def __init__(self, model_name: str = None):
         self.model_name = model_name or settings.CHRONOS_MODEL_NAME
         print(f"Loading Chronos-2 Pipeline from: {self.model_name}...")
+        
+        # Select device dynamically based on availability
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.pipeline = Chronos2Pipeline.from_pretrained(
             self.model_name,
-            device_map="cpu",
+            device_map=device,
             torch_dtype=torch.bfloat16,
             low_cpu_mem_usage=True
         )
@@ -38,6 +50,7 @@ class Chronos2Forecaster:
             "p90": self.pipeline.quantiles.index(0.9),
         }
 
+    @spaces.GPU
     def forecast(
         self,
         history_df: pd.DataFrame,
