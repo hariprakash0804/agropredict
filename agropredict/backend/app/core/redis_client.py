@@ -12,6 +12,8 @@ redis_client = aioredis.from_url(
     encoding="utf-8",
     decode_responses=True,
     socket_connect_timeout=5,
+    health_check_interval=30,
+    retry_on_timeout=True,
 )
 
 
