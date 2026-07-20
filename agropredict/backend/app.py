@@ -32,9 +32,9 @@ with gr.Blocks() as demo:
     btn = gr.Button("Init", visible=False)
     btn.click(dummy_gpu_trigger, inputs=inp, outputs=out)
 
-# 4. Mount our FastAPI app onto Gradio's internal FastAPI app at the "/api" prefix
-# This keeps all your FastAPI endpoints accessible at /api/...
-demo.app.mount("/api", app)
+# 4. Mount our FastAPI app onto Gradio's internal FastAPI app at the root prefix "/"
+# This preserves all "/api/..." path prefixes correctly for routing
+demo.app.mount("/", app)
 
 if __name__ == "__main__":
     # Launch Gradio natively on port 7860 (satisfying HF ZeroGPU supervisor)
