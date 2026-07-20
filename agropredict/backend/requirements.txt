@@ -20,12 +20,12 @@ python-dotenv==1.0.1
 httpx==0.28.1
 
 # Data processing
-pandas==2.2.3
-numpy==1.26.4
+pandas>=2.0.0
+numpy>=1.22.0
 
 # Forecasting - baselines
-lightgbm==4.5.0
-scikit-learn==1.6.1
+lightgbm>=4.0.0
+scikit-learn>=1.0.0
 
 # --extra-index-url https://download.pytorch.org/whl/cpu
 
