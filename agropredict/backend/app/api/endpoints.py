@@ -278,6 +278,7 @@ async def get_history(
     db: AsyncSession = Depends(get_db)
 ):
     """Fetch historical price and weather observations for a commodity-mandi pair (pulling live if not cached)."""
+    print(f"[DEBUG] get_history called with commodity_slug={commodity_slug}, mandi_name={mandi_name}")
     # 1. Parse dates
     today = date.today()
     s_date = date.fromisoformat(start_date) if start_date else today - timedelta(days=180)
@@ -315,6 +316,8 @@ async def get_history(
             await db.rollback()
             mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
             mandi = mandi_res.scalar_one()
+
+    print(f"[DEBUG] get_history mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
 
     # 4. Fetch prices from DB
     prices_res = await db.execute(
@@ -431,6 +434,8 @@ async def get_forecast(
     """
     if horizon not in [7, 30]:
         raise HTTPException(status_code=400, detail="Horizon must be either 7 or 30 days")
+
+    print(f"[DEBUG] get_forecast called with commodity_slug={commodity_slug}, mandi_name={mandi_name}")
         
     # 1. Check Redis Cache
     cache_key = f"forecast:{commodity_slug}:{mandi_name}:{horizon}"
@@ -473,6 +478,8 @@ async def get_forecast(
             await db.rollback()
             mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
             mandi = mandi_res.scalar_one()
+
+    print(f"[DEBUG] get_forecast mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
         
     # 4. Fetch historical data (last 120 days to construct features/context)
     prices_res = await db.execute(
