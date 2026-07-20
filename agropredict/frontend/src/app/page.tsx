@@ -326,31 +326,101 @@ export default function Home() {
     }
   };
 
-  // Export Data as CSV
-  const downloadCSV = () => {
+  // Export Data as Excel
+  const downloadExcel = () => {
     if (!history || !forecast) return;
     
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Date,Type,Actual Price (INR),Forecast p10 (INR),Forecast p50 (INR),Forecast p90 (INR),Max Temp (C),Precipitation (mm)\n";
+    let tableHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>AgroPredict Data</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          table { border-collapse: collapse; font-family: 'Segoe UI', Calibri, Arial, sans-serif; }
+          th { background-color: #10b981; color: white; font-weight: bold; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+          td { border: 1px solid #e2e8f0; padding: 6px 12px; text-align: left; color: #334155; }
+          .num { text-align: right; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 120px;">Date</th>
+              <th style="width: 100px;">Type</th>
+              <th style="width: 150px; text-align: right;">Actual Price (INR)</th>
+              <th style="width: 150px; text-align: right;">Forecast p10 (INR)</th>
+              <th style="width: 150px; text-align: right;">Forecast p50 (INR)</th>
+              <th style="width: 150px; text-align: right;">Forecast p90 (INR)</th>
+              <th style="width: 120px; text-align: right;">Max Temp (C)</th>
+              <th style="width: 150px; text-align: right;">Precipitation (mm)</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
     
-    // Add history
+    // Add history rows
     history.prices.forEach((p) => {
-      csvContent += `${p.date},Historical,${p.modal_price},,,,\n`;
+      tableHtml += `
+        <tr>
+          <td>${p.date}</td>
+          <td>Historical</td>
+          <td class="num">${p.modal_price}</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      `;
     });
     
-    // Add forecast
+    // Add forecast rows
     forecast.forecast_dates.forEach((d, i) => {
       const w = forecast.weather_covariates[i] || {};
-      csvContent += `${d},Forecast,,${Math.round(forecast.p10[i])},${Math.round(forecast.p50[i])},${Math.round(forecast.p90[i])},${w.temp_max || ""},${w.precipitation_mm || ""}\n`;
+      tableHtml += `
+        <tr>
+          <td>${d}</td>
+          <td>Forecast</td>
+          <td></td>
+          <td class="num">${Math.round(forecast.p10[i])}</td>
+          <td class="num">${Math.round(forecast.p50[i])}</td>
+          <td class="num">${Math.round(forecast.p90[i])}</td>
+          <td class="num">${w.temp_max !== undefined ? w.temp_max : ""}</td>
+          <td class="num">${w.precipitation_mm !== undefined ? w.precipitation_mm : ""}</td>
+        </tr>
+      `;
     });
     
-    const encodedUri = encodeURI(csvContent);
+    tableHtml += `
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob([tableHtml], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `agropredict_${forecast.commodity.toLowerCase()}_${forecast.mandi.toLowerCase().replace(/\s+/g, '_')}.csv`);
+    link.href = url;
+    link.download = `agropredict_${forecast.commodity.toLowerCase()}_${forecast.mandi.toLowerCase().replace(/\s+/g, '_')}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Export AI Advisor Chat & Advisory as Text Report
@@ -868,11 +938,11 @@ export default function Home() {
               {history && forecast && (
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={downloadCSV}
-                    title="Download complete price and weather dataset as CSV"
+                    onClick={downloadExcel}
+                    title="Download complete price and weather dataset as an Excel spreadsheet"
                     className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
                   >
-                    📥 Download Data (CSV)
+                    📥 Download Data (Excel)
                   </button>
                   <button
                     onClick={downloadChatReport}
