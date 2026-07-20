@@ -268,21 +268,22 @@ async def get_mandis(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/metadata/agmarknet", tags=["Metadata"])
-async def get_agmarknet_metadata(db: AsyncSession = Depends(get_db), redis = Depends(get_redis)):
+async def get_agmarknet_metadata():
     """
     Get a complete hierarchy of states -> districts -> markets, and all commodity names
-    from the daily prices API on data.gov.in (with a fallback pre-seeded dataset).
+    compiled from the local Agmarknet CSV datasets.
     """
-    cache_key = "metadata:agmarknet"
-    try:
-        cached = await redis.get(cache_key)
-        if cached:
-            return json.loads(cached)
-    except Exception as e:
-        print(f"Redis metadata read error: {e}")
-
-    # Rich default fallback metadata structure
-    fallback_data = {
+    from pathlib import Path
+    metadata_file = Path(__file__).resolve().parent.parent / "metadata" / "agmarknet_hierarchy.json"
+    if metadata_file.exists():
+        try:
+            with open(metadata_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading agmarknet_hierarchy.json: {e}")
+            
+    # Default fallback metadata structure
+    return {
         "states": {
             "Tamil Nadu": {
                 "Salem": ["Sooramangalam", "Ammapet", "Thathakapatti", "tadagapatty"],
@@ -304,74 +305,6 @@ async def get_agmarknet_metadata(db: AsyncSession = Depends(get_db), redis = Dep
         },
         "commodities": ["Apple", "Onion", "Potato", "Tomato", "Arhar (Tur/Red Gram)(Whole)", "Garlic", "Ginger", "Green Chilli"]
     }
-
-    # Fetch live records from data.gov.in to enrich the metadata
-    api_key = get_settings().DATA_GOV_IN_API_KEY
-    daily_url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
-    params = {
-        "api-key": api_key,
-        "format": "json",
-        "limit": 5000
-    }
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(daily_url, params=params, timeout=12.0)
-            if resp.status_code == 200:
-                records = resp.json().get("records", [])
-                
-                states_map = {}
-                commodities_set = set(fallback_data["commodities"])
-                
-                for r in records:
-                    state = r.get("state") or r.get("State")
-                    district = r.get("district") or r.get("District")
-                    market = r.get("market") or r.get("Market")
-                    commodity = r.get("commodity") or r.get("Commodity")
-                    
-                    if state and district and market:
-                        # Clean and normalize strings
-                        state = state.strip()
-                        district = district.strip()
-                        market = market.strip()
-                        
-                        if state not in states_map:
-                            states_map[state] = {}
-                        if district not in states_map[state]:
-                            states_map[state][district] = []
-                        if market not in states_map[state][district]:
-                            states_map[state][district].append(market)
-                            
-                    if commodity:
-                        commodities_set.add(commodity.strip())
-                
-                # Merge fallback data into live data
-                for f_state, f_districts in fallback_data["states"].items():
-                    if f_state not in states_map:
-                        states_map[f_state] = {}
-                    for f_district, f_markets in f_districts.items():
-                        if f_district not in states_map[f_state]:
-                            states_map[f_state][f_district] = []
-                        for f_market in f_markets:
-                            if f_market not in states_map[f_state][f_district]:
-                                states_map[f_state][f_district].append(f_market)
-                
-                result = {
-                    "states": states_map,
-                    "commodities": sorted(list(commodities_set))
-                }
-                
-                # Cache in Redis for 24 hours
-                try:
-                    await redis.setex(cache_key, timedelta(hours=24), json.dumps(result))
-                except Exception as e:
-                    print(f"Redis metadata write error: {e}")
-                    
-                return result
-    except Exception as e:
-        print(f"Error fetching live agmarknet metadata: {e}")
-        
-    return fallback_data
 
 
 @router.get("/history/{commodity_slug}/{mandi_name}", response_model=HistoryResponse, tags=["Forecasting"])

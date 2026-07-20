@@ -1,0 +1,858 @@
+{
+  "states": {
+    "Andaman and Nicobar": {
+      "North and Middle Andaman": [
+        "Diglipur Vegetable Market (Subhashgram)"
+      ]
+    },
+    "Andhra Pradesh": {
+      "Ananthapuramu": [
+        "Anantapur APMC"
+      ],
+      "Annamayya": [
+        "B.Kothakota H/Q Angallu",
+        "Kalikiri APMC"
+      ],
+      "Bapatla": [
+        "Kuchinapudi APMC"
+      ],
+      "Chittor": [
+        "Chittoor APMC"
+      ],
+      "Dr.B.R.A.Konaseema": [
+        "Amalapuram APMC",
+        "Mummidivaram APMC",
+        "Ramachandrapuram APMC",
+        "Ravulapalem (Kothapeta APMC)"
+      ],
+      "East Godavari": [
+        "Kovvur APMC"
+      ],
+      "Eluru": [
+        "Chintalapudi APMC",
+        "Polavaram APMC"
+      ],
+      "NTR": [
+        "Mylavaram APMC"
+      ],
+      "Palnadu": [
+        "Gurazala APMC"
+      ],
+      "Sri Sathya Sai": [
+        "Madakasira APMC",
+        "Penukonda APMC",
+        "Puttaparthi  APMC"
+      ],
+      "Vijayanagaram": [
+        "Kothavalasa APMC"
+      ]
+    },
+    "Bihar": {
+      "East Champaran/ Motihari": [
+        "Chakia APMC",
+        "Raxaul APMC"
+      ],
+      "Muzaffarpur": [
+        "Bhagwanpur Mandi APMC"
+      ],
+      "Sheikhpura": [
+        "Barbigha APMC",
+        "Shekhpura APMC"
+      ]
+    },
+    "Gujarat": {
+      "Ahmedabad": [
+        "Viramgam APMC"
+      ],
+      "Amreli": [
+        "Babra APMC",
+        "Damnagar APMC",
+        "The Agricultural Produce Market Committee-Amreli"
+      ],
+      "Anand": [
+        "Khambhat(Veg Yard Khambhat) APMC"
+      ],
+      "Gandhinagar": [
+        "Mansa APMC"
+      ],
+      "Surat": [
+        "Songadh APMC",
+        "Songadh(Badarpada) APMC",
+        "Songadh(Umrada) APMC",
+        "Surat APMC"
+      ]
+    },
+    "Haryana": {
+      "Gurgaon": [
+        "Gurgaon APMC"
+      ],
+      "Hissar": [
+        "Barwala(Hisar) APMC"
+      ],
+      "Kaithal": [
+        "Dhand APMC"
+      ],
+      "Mahendragarh-Narnaul": [
+        "Narnaul APMC"
+      ],
+      "Mewat": [
+        "FerozpurZirkha(Nagina) APMC"
+      ],
+      "Panipat": [
+        "Panipat APMC"
+      ],
+      "Rewari": [
+        "Kosli APMC",
+        "Rewari APMC"
+      ],
+      "Sonipat": [
+        "Gohana APMC"
+      ]
+    },
+    "Himachal Pradesh": {
+      "Kangra": [
+        "SMY Baijnath",
+        "SMY Jaisinghpur",
+        "SMY Palampur"
+      ],
+      "Mandi": [
+        "SMY Jogindernagar"
+      ],
+      "Shimla": [
+        "SMY Mehndli",
+        "SMY Rohroo"
+      ]
+    },
+    "Jammu and Kashmir": {
+      "Baramulla": [
+        "Sopore (Nowpora) (F&V)"
+      ],
+      "Ganderbal": [
+        "Zazna Ganderbal (F&V)"
+      ]
+    },
+    "Keralam": {
+      "Alappuzha": [
+        "Chengannur Market",
+        "Cherthala Market",
+        "Harippad Market"
+      ],
+      "Ernakulam": [
+        "Amalapuram  VFPCK Market",
+        "Perumbavoor Market",
+        "Puthenvelikkara  VFPCK Market"
+      ],
+      "Idukki": [
+        "Alacode  VFPCK Market",
+        "Udumbannoor  VFPCK Market"
+      ],
+      "Kannur": [
+        "Kannur Market",
+        "Payyannur Market"
+      ],
+      "Kasargod": [
+        "Manjeswaram Market"
+      ],
+      "Kollam": [
+        "Anchal VFPCK Market",
+        "Kulathoopuzha VFPCK Market",
+        "Valakom  VFPCK Market"
+      ],
+      "Kottayam": [
+        "Athirampuzha Market",
+        "Pala Market",
+        "Pampady Market"
+      ],
+      "Kozhikode(Calicut)": [
+        "Kallachi Market",
+        "Quilandy Market"
+      ],
+      "Malappuram": [
+        "Mankada VFPCK Market"
+      ],
+      "Thirssur": [
+        "Kadukutty VFPCK Market",
+        "Karuvannur VFPCK Market",
+        "Kuzhur  VFPCK Market",
+        "Muriyad  VFPCK Market",
+        "Pariyaram VFPCK Market"
+      ],
+      "Thiruvananthapuram": [
+        "Parassala Market"
+      ],
+      "Wayanad": [
+        "Pulpally Market"
+      ]
+    },
+    "Madhya Pradesh": {
+      "Alirajpur": [
+        "Alirajpur APMC"
+      ],
+      "Badwani": [
+        "Sendhwa(F&V) APMC"
+      ],
+      "Dhar": [
+        "Dhamnod APMC"
+      ],
+      "Gwalior": [
+        "Bhitarwar APMC"
+      ],
+      "Harda": [
+        "Sirali(F&V) APMC"
+      ],
+      "Indore": [
+        "Mhow APMC"
+      ],
+      "Jhabua": [
+        "Petlawad APMC"
+      ],
+      "Katni": [
+        "Katni APMC"
+      ],
+      "Morena": [
+        "Kailaras APMC"
+      ],
+      "Ratlam": [
+        "Sailana APMC"
+      ],
+      "Sagar": [
+        "Shahagarh APMC"
+      ],
+      "Satna": [
+        "Nagod APMC",
+        "Satna APMC"
+      ],
+      "Shajapur": [
+        "Agar APMC"
+      ],
+      "Sheopur": [
+        "Vijaypur APMC"
+      ],
+      "Shivpuri": [
+        "Karera APMC",
+        "Khatora APMC"
+      ],
+      "Tikamgarh": [
+        "Tikamgarh APMC"
+      ],
+      "Ujjain": [
+        "Badnagar APMC"
+      ]
+    },
+    "Maharashtra": {
+      "Pune": [
+        "Pune(Pimpri) APMC"
+      ],
+      "Ratnagiri": [
+        "Ratnagiri (Nachane) APMC"
+      ]
+    },
+    "Nagaland": {
+      "Dimapur": [
+        "Dimapur APMC"
+      ],
+      "Wokha": [
+        "Baghty APMC",
+        "Wokha Town APMC"
+      ]
+    },
+    "Odisha": {
+      "Angul": [
+        "Pallahara APMC"
+      ],
+      "Bargarh": [
+        "Bargarh APMC",
+        "Bargarh(Barapalli) APMC"
+      ],
+      "Bolangir": [
+        "Kantabaji APMC"
+      ],
+      "Dhenkanal": [
+        "Hindol APMC"
+      ],
+      "Mayurbhanja": [
+        "Karanjia APMC"
+      ],
+      "Sundergarh": [
+        "Panposh APMC",
+        "Sargipali APMC"
+      ]
+    },
+    "Punjab": {
+      "Amritsar": [
+        "Rayya APMC"
+      ],
+      "Fazilka": [
+        "Jalalabad APMC"
+      ],
+      "Hoshiarpur": [
+        "Garh Shankar APMC",
+        "GarhShankar (Kotfatuhi) APMC",
+        "Garhshankar(Saila Khurd) APMC",
+        "Mukerian APMC",
+        "Tanda Urmur APMC"
+      ],
+      "Jalandhar": [
+        "Noor Mehal APMC"
+      ],
+      "Kapurthala": [
+        "Bhulath (Nadala) APMC",
+        "Bhulath APMC"
+      ],
+      "Ludhiana": [
+        "Doraha APMC",
+        "Khanna APMC",
+        "Ludhiana APMC",
+        "Sahnewal APMC"
+      ],
+      "Mansa": [
+        "Mansa APMC"
+      ],
+      "Patiala": [
+        "Patiala APMC"
+      ],
+      "Tarntaran": [
+        "Bhikhiwind APMC",
+        "Patti APMC"
+      ]
+    },
+    "Rajasthan": {
+      "Bikaner": [
+        "Sridungargarh APMC"
+      ],
+      "Chittorgarh": [
+        "Begu APMC"
+      ],
+      "Dungarpur": [
+        "Dungarpur APMC"
+      ],
+      "Ganganagar": [
+        "Sriganganagar (F&V) APMC"
+      ],
+      "Hanumangarh": [
+        "Rawatsar APMC"
+      ],
+      "Jaisalmer": [
+        "Jaisalmer APMC",
+        "Mohangarh APMC"
+      ],
+      "Jalore": [
+        "Jalore APMC"
+      ]
+    },
+    "Tamil Nadu": {
+      "Ariyalur": [
+        "Ariyalur(Uzhavar Sandhai)",
+        "Jeyankondam (Uzhavar Sandhai )"
+      ],
+      "Chengalpattu": [
+        "Madhuranthagam(Uzhavar Sandhai )",
+        "Medavakkam(Uzhavar Sandhai )"
+      ],
+      "Coimbatore": [
+        "Kurichi(Uzhavar Sandhai )",
+        "Mettupalayam(Uzhavar Sandhai )",
+        "RSPuram(Uzhavar Sandhai )",
+        "Singanallur(Uzhavar Sandhai )",
+        "Sulur(Uzhavar Sandhai )",
+        "Sundarapuram(Uzhavar Sandhai )",
+        "Udumalpet APMC",
+        "Vadavalli(Uzhavar Sandhai )"
+      ],
+      "Cuddalore": [
+        "Chidambaram(Uzhavar Sandhai )",
+        "Cuddalore(Uzhavar Sandhai )",
+        "Panruti(Uzhavar Sandhai )",
+        "Vadalur(Uzhavar Sandhai )",
+        "Veppur APMC",
+        "Viruthachalam(Uzhavar Sandhai )"
+      ],
+      "Dharmapuri": [
+        "AJattihalli(Uzhavar Sandhai )",
+        "Dharmapuri(Uzhavar Sandhai )",
+        "Harur(Uzhavar Sandhai )",
+        "Karimangalam(Uzhavar Sandhai)",
+        "Palacode(Uzhavar Sandhai )",
+        "Pennagaram(Uzhavar Sandhai )"
+      ],
+      "Dindigul": [
+        "Chinnalapatti(Uzhavar Sandhai )",
+        "Palani(Uzhavar Sandhai )"
+      ],
+      "Erode": [
+        "Gobichettipalayam(Uzhavar Sandhai )",
+        "Periyar Nagar(Uzhavar Sandhai )",
+        "Perundurai(Uzhavar Sandhai )",
+        "Sampath Nagar(Uzhavar Sandhai )",
+        "Sathiyamagalam(Uzhavar Sandhai )",
+        "Thalavadi(Uzhavar Sandhai )"
+      ],
+      "Kallakuruchi": [
+        "Kallakurichi(Uzhavar Sandhai )",
+        "Sankarapuram(Uzhavar Sandhai )"
+      ],
+      "Kancheepuram": [
+        "Kundrathur(Uzhavar Sandhai )",
+        "Sunguvarchatram(Uzhavar Sandhai )",
+        "Uthiramerur APMC"
+      ],
+      "Karur": [
+        "Gandhigramam(Uzhavar Sandhai)",
+        "Karur(Uzhavar Sandhai )",
+        "Kulithalai(Uzhavar Sandhai )",
+        "Pallapatti (Uzhavar Sandhai )",
+        "Velayuthampalayam(Uzhavar Sandhai )",
+        "Vengamedu(Uzhavar Sandhai )"
+      ],
+      "Krishnagiri": [
+        "Avallapalli(Uzhavar Sandhai )",
+        "Denkanikottai(Uzhavar Sandhai )",
+        "Hosur(Uzhavar Sandhai )",
+        "Kaveripattinam(Uzhavar Sandhai )",
+        "Krishnagiri(Uzhavar Sandhai )"
+      ],
+      "Madurai": [
+        "Anna nagar(Uzhavar Sandhai )",
+        "Chokkikulam(Uzhavar Sandhai )",
+        "Melur(Uzhavar Sandhai )",
+        "Thirumangalam(Uzhavar Sandhai )",
+        "Usilampatti(Uzhavar Sandhai )"
+      ],
+      "Nagapattinam": [
+        "Mayiladuthurai(Uzhavar Sandhai )",
+        "Nagapattinam(Uzhavar Sandhai )",
+        "Sirkali(Uzhavar Sandhai )",
+        "Vedaranyam(Uzhavar Sandhai)"
+      ],
+      "Nagercoil (Kannyiakumari)": [
+        "Myladi(Uzhavar Sandhai )",
+        "Vadaseri APMC"
+      ],
+      "Namakkal": [
+        "Kumarapalayam(Uzhavar Sandhai )",
+        "Mohanur(Uzhavar Sandhai )",
+        "Namakkal(Uzhavar Sandhai )",
+        "Paramathivelur(Uzhavar Sandhai )",
+        "Rasipuram(Uzhavar Sandhai )",
+        "Tiruchengode APMC"
+      ],
+      "Perambalur": [
+        "Perambalur(Uzhavar Sandhai )"
+      ],
+      "Pudukkottai": [
+        "Alangudi(Uzhavar Sandhai )",
+        "Aranthangi(Uzhavar Sandhai )",
+        "Gandarvakottai(Uzhavar Sandhai )",
+        "Karambakkudi(Uzhavar Sandhai )",
+        "Viralimalai(Uzhavar Sandhai )"
+      ],
+      "Ramanathapuram": [
+        "Paramakudi(Uzhavar Sandhai )"
+      ],
+      "Ranipet": [
+        "Arcot(Uzhavar Sandhai )",
+        "Ranipettai(Uzhavar Sandhai )"
+      ],
+      "Salem": [
+        "Ammapet(Uzhavar Sandhai )",
+        "Ammapet(Uzhavar Sandhai ) APMC",
+        "Athur(Uzhavar Sandhai )",
+        "Athur(Uzhavar Sandhai ) APMC",
+        "Attayampatti(Uzhavar Sandhai )",
+        "Attayampatti(Uzhavar Sandhai ) APMC",
+        "Attur",
+        "Attur APMC",
+        "Edapadi (Uzhavar Sandhai )",
+        "Edapadi (Uzhavar Sandhai ) APMC",
+        "Edappadi",
+        "Edappadi APMC",
+        "Elampillai(Uzhavar Sandhai )",
+        "Elampillai(Uzhavar Sandhai ) APMC",
+        "Gangavalli",
+        "Gangavalli APMC",
+        "Hasthampatti(Uzhavar Sandhai )",
+        "Hasthampatti(Uzhavar Sandhai ) APMC",
+        "Jalagandapuram(Uzhavar Sandhai )",
+        "Jalagandapuram(Uzhavar Sandhai ) APMC",
+        "Kadaiyampatti",
+        "Kadaiyampatti APMC",
+        "Karumanturai",
+        "Karumanturai APMC",
+        "Kolathur",
+        "Kolathur APMC",
+        "Konganapuram",
+        "Konganapuram (Agri. Coop. Marketing Society)",
+        "Konganapuram APMC",
+        "Mecheri",
+        "Mecheri(Uzhavar Sandhai)",
+        "Mettur(Uzhavar Sandhai )",
+        "Mettur(Uzhavar Sandhai ) APMC",
+        "Omalur",
+        "Salem",
+        "Salem APMC",
+        "Sankagiri",
+        "Sooramangalam(Uzhavar Sandhai )",
+        "Sooramangalam(Uzhavar Sandhai ) APMC",
+        "Thalaivasal",
+        "Thalaivasal APMC",
+        "Thammampati",
+        "Thammampati APMC",
+        "Thammampatti (Uzhavar Sandhai )",
+        "Thammampatti (Uzhavar Sandhai ) APMC",
+        "Thathakapatti(Uzhavar Sandhai )",
+        "Thathakapatti(Uzhavar Sandhai ) APMC",
+        "Tiruchengode(Agri. Coop. Marketing Society)",
+        "Vazhapadi",
+        "Vazhapadi APMC",
+        "Vazhapadi(Uzhavar Sandhai)"
+      ],
+      "Sivaganga": [
+        "Devakottai (Uzhavar Sandhai )",
+        "Karaikudi(Uzhavar Sandhai )",
+        "Singampunari(Uzhavar Sandhai )",
+        "Sivagangai (Uzhavar Sandhai )",
+        "Tirupatthur(Uzhavar Sandhai )"
+      ],
+      "Thanjavur": [
+        "Kumbakonam (Uzhavar Sandhai )",
+        "Pattukottai(Uzhavar Sandhai )",
+        "Thanjavur(Uzhavar Sandhai )",
+        "Tirukattupalli(Uzhavar Sandhai )"
+      ],
+      "The Nilgiris": [
+        "Coonoor(Uzhavar Sandhai )",
+        "Gudalur(Uzhavar Sandhai )",
+        "Udhagamandalam(Uzhavar Sandhai )"
+      ],
+      "Theni": [
+        "Andipatti(Uzhavar Sandhai )",
+        "Bodinayakanur(Uzhavar Sandhai )",
+        "Chinnamanur(Uzhavar Sandhai )",
+        "Devaram(Uzhavar Sandhai )",
+        "Kambam(Uzhavar Sandhai )",
+        "Periyakulam(Uzhavar Sandhai )",
+        "Theni(Uzhavar Sandhai )"
+      ],
+      "Thiruchirappalli": [
+        "Lalgudi(Uzhavar Sandhai )",
+        "Manachanallur(Uzhavar Sandhai )",
+        "Manapparai(Uzhavar Sandhai )",
+        "Musiri(Uzhavar Sandhai )",
+        "Thiruverumbur(Uzhavar Sandhai )",
+        "Thuraiyur APMC"
+      ],
+      "Thirunelveli": [
+        "Kandiyaperi(Uzhavar Sandhai )",
+        "Palayamkottai(Uzhavar Sandhai )"
+      ],
+      "Thirupathur": [
+        "Natrampalli(Uzhavar Sandhai )"
+      ],
+      "Thirupur": [
+        "Dharapuram(Uzhavar Sandhai )",
+        "Kangayam(Uzhavar Sandhai )",
+        "Palladam(Uzhavar Sandhai )",
+        "Tiruppur (North) (Uzhavar Sandhai )",
+        "Tiruppur (South) (Uzhavar Sandhai )"
+      ],
+      "Thiruvannamalai": [
+        "Arani(Uzhavar Sandhai )",
+        "Chengam(Uzhavar Sandhai )",
+        "Cheyyar(Uzhavar Sandhai )",
+        "Polur(Uzhavar Sandhai )",
+        "Tamarainagar(Uzhavar Sandhai )",
+        "Tiruvannamalai(Uzhavar Sandhai )",
+        "Vandavasi(Uzhavar Sandhai )"
+      ],
+      "Thiruvarur": [
+        "Mannargudi II(Uzhavar Sandhai )",
+        "Muthupettai(Uzhavar Sandhai )",
+        "Tiruvarur(Uzhavar Sandhai )",
+        "Valangaiman APMC"
+      ],
+      "Thiruvellore": [
+        "Naravarikuppam(Uzhavar Sandhai )",
+        "Perambakkam(Uzhavar Sandhai )",
+        "Tiruthani(Uzhavar Sandhai )"
+      ],
+      "Tuticorin": [
+        "Kovilpatti(Uzhavar Sandhai )",
+        "Tuticorin(Uzhavar Sandhai )"
+      ],
+      "Vellore": [
+        "Gudiyatham(Uzhavar Sandhai )",
+        "Kahithapattarai(Uzhavar Sandhai )",
+        "Pallikonda(Uzhavar Sandhai)",
+        "Perampet(Uzhavar Sandhai)",
+        "Thirupathur APMC",
+        "Vellore APMC"
+      ],
+      "Villupuram": [
+        "Avalurpet APMC",
+        "Gingee(Uzhavar Sandhai )",
+        "Tindivanam APMC",
+        "Ulundurpettai APMC",
+        "Vikkiravandi APMC"
+      ],
+      "Virudhunagar": [
+        "Aruppukottai(Uzhavar Sandhai )",
+        "Kariyapatti(Uzhavar Sandhai )",
+        "Rajapalayam(Uzhavar Sandhai )",
+        "Sathur(Uzhavar Sandhai )",
+        "Thalavaipuram(Uzhavar Sandhai )"
+      ]
+    },
+    "Telangana": {
+      "Adilabad": [
+        "Boath APMC",
+        "Jainath APMC"
+      ],
+      "Bhadradri Kothagudem": [
+        "Dammapet APMC"
+      ],
+      "Hanumakonda": [
+        "Kamalapur APMC"
+      ],
+      "Karimnagar": [
+        "Huzzurabad APMC"
+      ],
+      "Khammam": [
+        "Sattupally APMC"
+      ],
+      "Mahbubnagar": [
+        "Mahabubnagar(Rythu Bazar)"
+      ],
+      "Medchal Malkajgiri": [
+        "Kukatpally,RBZ"
+      ]
+    },
+    "Tripura": {
+      "South Tripura": [
+        "Barpathari APMC"
+      ]
+    },
+    "Uttar Pradesh": {
+      "Badaun": [
+        "Dataganj APMC",
+        "Shahaswan APMC"
+      ],
+      "Bareilly": [
+        "Anwala APMC"
+      ],
+      "Bulandshahar": [
+        "Anoop Shahar APMC",
+        "Gulavati APMC"
+      ],
+      "Hathras": [
+        "Shadabad APMC"
+      ],
+      "Jalaun (Orai)": [
+        "Jalaun APMC"
+      ],
+      "Khiri (Lakhimpur)": [
+        "Maigalganj APMC"
+      ],
+      "Mau(Maunathbhanjan)": [
+        "Kopaganj APMC"
+      ],
+      "Shamli": [
+        "Kairana APMC"
+      ]
+    },
+    "Uttarakhand": {
+      "Dehradoon": [
+        "Chakrata APMC",
+        "Vikasnagar APMC"
+      ],
+      "Haridwar": [
+        "Roorkee APMC"
+      ],
+      "Udhamsinghnagar": [
+        "Bazpur APMC"
+      ]
+    },
+    "West Bengal": {
+      "Darjeeling": [
+        "Darjeeling APMC",
+        "Karsiyang(Matigara) APMC",
+        "Siliguri APMC"
+      ],
+      "Jhargram": [
+        "Jhargram APMC"
+      ],
+      "Medinipur(E)": [
+        "Kolaghat APMC",
+        "Tamluk (Medinipur E) APMC"
+      ]
+    }
+  },
+  "commodities": [
+    "Amaranthus",
+    "Amla(Nelli Kai)",
+    "Apple",
+    "Apricot(Jardalu/Khumani)",
+    "Arecanut(Betelnut/Supari)",
+    "Arhar (Tur/Red Gram)(Whole)",
+    "Arhar(Tur/Red Gram)(Whole)",
+    "Ashgourd",
+    "Baby Corn",
+    "Bajra(Pearl Millet/Cumbu)",
+    "Banana",
+    "Banana - Green",
+    "Beans",
+    "Beetroot",
+    "Bengal Gram(Gram)(Whole)",
+    "Betal Leaves",
+    "Bhindi(Ladies Finger)",
+    "Bitter gourd",
+    "Black Gram (Urd Beans)(Whole)",
+    "Black Gram Dal (Urd Dal)",
+    "Black Gram Dal(Urd Dal)",
+    "Black Gram(Urd Beans)(Whole)",
+    "Black pepper",
+    "Bottle gourd",
+    "Brinjal",
+    "Cabbage",
+    "Capsicum",
+    "Carrot",
+    "Castor Seed",
+    "Cauliflower",
+    "Chikoos(Sapota)",
+    "Chili Red",
+    "Chilly Capsicum",
+    "Chow Chow",
+    "Cluster beans",
+    "Cocoa",
+    "Coconut",
+    "Coconut Oil",
+    "Coconut Seed",
+    "Coffee",
+    "Colacasia",
+    "Copra",
+    "Coriander(Leaves)",
+    "Cotton",
+    "Cotton Seed",
+    "Cowpea (Lobia/Karamani)",
+    "Cowpea(Veg)",
+    "Cucumbar(Kheera)",
+    "Cummin Seed(Jeera)",
+    "Custard Apple (Sharifa)",
+    "Custard Apple(Sharifa)",
+    "Drumstick",
+    "Dry Chillies",
+    "Elephant Yam (Suran)",
+    "Elephant Yam(Suran)/Amorphophallus",
+    "Field Pea",
+    "Fig(Anjura/Anjeer)",
+    "Fish",
+    "French Beans(Frasbean)",
+    "Galgal(Lemon)",
+    "Garlic",
+    "Gingelly Oil",
+    "Ginger(Dry)",
+    "Ginger(Green)",
+    "Grapes",
+    "Green Avare (W)",
+    "Green Avare(W)",
+    "Green Chilli",
+    "Green Gram (Moong)(Whole)",
+    "Green Gram Dal(Moong Dal)",
+    "Green Gram(Moong)(Whole)",
+    "Green Peas",
+    "Ground Nut Seed",
+    "Groundnut",
+    "Groundnut (Split)",
+    "Groundnut pods (raw)",
+    "Groundnut pods(raw)",
+    "Groundnut(Split)",
+    "Guar",
+    "Guava",
+    "Gur(Jaggery)",
+    "Indian Beans (Seam)",
+    "Indian Beans(Seam)",
+    "Jack Fruit",
+    "Jack Fruit(Ripe)",
+    "Jamun(Narale Hannu)",
+    "Jasmine",
+    "Jowar(Sorghum)",
+    "Kakada",
+    "Karbuja(Musk Melon)",
+    "Knool Khol",
+    "Ladies Finger",
+    "Leafy Vegetable",
+    "Lemon",
+    "Lime",
+    "Litchi",
+    "Little gourd(Kundru)",
+    "Long Melon(Kakri)",
+    "Maize",
+    "Mango",
+    "Mango (Raw-Ripe)",
+    "Mango(Raw-Ripe)",
+    "Marigold(Calcutta)",
+    "Marigold(loose)",
+    "Mashrooms",
+    "Masur Dal",
+    "Methi Seeds",
+    "Mint(Pudina)",
+    "Mousambi(Sweet Lime)",
+    "Mustard",
+    "Neem Seed",
+    "Onion",
+    "Onion Green",
+    "Orange",
+    "Other green and fresh vegetables",
+    "Paddy(Common)",
+    "Paddy(Dhan)(Common)",
+    "Papaya",
+    "Papaya(Raw)",
+    "Pea Pod/Pea Cod/हरी मटर",
+    "Pear(Marasebu)",
+    "Peas Wet",
+    "Pepper garbled",
+    "Pepper ungarbled",
+    "Pineapple",
+    "Plum",
+    "Pointed gourd(Parval)",
+    "Pomegranate",
+    "Potato",
+    "Prawn",
+    "Pumpkin",
+    "Raddish",
+    "Ragi (Finger Millet)",
+    "Ragi(Finger Millet)",
+    "Red gram/Arhar/Tur(whole)",
+    "Rice",
+    "Ridgeguard(Tori)",
+    "Rose(Local)",
+    "Round gourd",
+    "Rubber",
+    "Sesamum(Sesame,Gingelly,Til)",
+    "Snakeguard",
+    "Soyabean",
+    "Spinach",
+    "Sponge gourd",
+    "Squash(Chappal Kadoo)",
+    "Sugar",
+    "Sugarcane",
+    "Sunflower",
+    "Sunflower Seed",
+    "Sweet Corn",
+    "Sweet Potato",
+    "Sweet Pumpkin",
+    "Tamarind Fruit",
+    "Tapioca",
+    "Tender Coconut",
+    "Thondekai",
+    "Tinda",
+    "Tomato",
+    "Tube Flower",
+    "Tube Rose(Loose)",
+    "Turmeric",
+    "Turnip",
+    "Water Melon",
+    "Wheat",
+    "Yam (Ratalu)",
+    "Yam(Ratalu)"
+  ]
+}
