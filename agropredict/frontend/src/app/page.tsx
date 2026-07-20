@@ -74,6 +74,60 @@ const getApiUrl = () => {
 };
 const API_BASE_URL = getApiUrl();
 
+const renderInlineFormatting = (text: string) => {
+  // Split by bold patterns (**bold**)
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-bold text-emerald-400">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
+const renderMarkdown = (text: string) => {
+  if (!text) return null;
+  const lines = text.split("\n");
+  return lines.map((line, idx) => {
+    const cleanLine = line.trim();
+    
+    // H3 Headers
+    if (cleanLine.startsWith("###")) {
+      const headingText = cleanLine.replace(/^###\s*/, "").replace(/\*\*/g, "");
+      return (
+        <h3 key={idx} className="text-sm font-bold text-zinc-100 mt-4 mb-2 first:mt-1">
+          {headingText}
+        </h3>
+      );
+    }
+    
+    // Bullet points
+    if (cleanLine.startsWith("* ") || cleanLine.startsWith("- ")) {
+      const bulletText = cleanLine.substring(2);
+      return (
+        <li key={idx} className="list-disc list-inside pl-1.5 text-zinc-300 my-1 leading-relaxed">
+          {renderInlineFormatting(bulletText)}
+        </li>
+      );
+    }
+    
+    // Plain paragraphs (or blank lines)
+    if (cleanLine === "") {
+      return <div key={idx} className="h-2" />;
+    }
+    
+    return (
+      <p key={idx} className="text-zinc-300 my-1 leading-relaxed">
+        {renderInlineFormatting(cleanLine)}
+      </p>
+    );
+  });
+};
+
 export default function Home() {
   const [commodities, setCommodities] = useState<{ id: number; name: string; slug: string }[]>([]);
   const [mandis, setMandis] = useState<{ id: number; name: string; state: string; district: string }[]>([]);
@@ -1144,9 +1198,11 @@ export default function Home() {
                   </p>
                   
                   {chatReply && (
-                    <div className="p-3.5 rounded-xl bg-emerald-950/10 border border-emerald-500/20 text-xs text-zinc-300 leading-relaxed whitespace-pre-line">
-                      <p className="font-bold text-emerald-400 mb-1">AI Advisor:</p>
-                      {chatReply}
+                    <div className="p-4 rounded-xl bg-emerald-950/10 border border-emerald-500/20 text-xs text-zinc-300">
+                      <p className="font-bold text-emerald-400 mb-2 border-b border-emerald-500/10 pb-1">AI Advisor:</p>
+                      <div className="flex flex-col gap-1">
+                        {renderMarkdown(chatReply)}
+                      </div>
                     </div>
                   )}
 
