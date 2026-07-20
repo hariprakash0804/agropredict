@@ -708,7 +708,7 @@ async def chat_advisor(req: ChatRequest):
     }
     
     payload = {
-        "model": "meta-llama/llama-3-8b-instruct:free",
+        "model": "openrouter/free",
         "messages": [
             {"role": "system", "content": context},
             {"role": "user", "content": req.question}
