@@ -26,6 +26,16 @@ async def lifespan(app: FastAPI):
     from app.models.commodity import Base, User, UserQueryLog, Commodity, Mandi, PriceObservation, WeatherObservation, ForecastAccuracy
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Lightweight migrations to add variety/grade columns to price_observations
+        from sqlalchemy import text
+        for col in ["variety", "grade"]:
+            try:
+                await conn.execute(text(f"ALTER TABLE price_observations ADD COLUMN {col} VARCHAR(100) DEFAULT 'FAQ'"))
+                print(f"[AgroPredict] Migration: Added column '{col}' to price_observations.")
+            except Exception:
+                # Column already exists, ignore
+                pass
     print("[AgroPredict] Database tables verified.")
 
     print("[AgroPredict] Starting background scheduler...")

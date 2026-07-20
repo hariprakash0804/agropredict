@@ -33,6 +33,8 @@ class PriceObservationOut(BaseModel):
     max_price: Optional[float] = None
     modal_price: Optional[float] = None
     arrival_qty: Optional[float] = None
+    variety: Optional[str] = "FAQ"
+    grade: Optional[str] = "FAQ"
 
     class Config:
         from_attributes = True
@@ -57,6 +59,8 @@ class ForecastResponse(BaseModel):
     p50: List[float]
     p90: List[float]
     weather_covariates: List[WeatherObservationOut]
+    variety: str = "FAQ"
+    grade: str = "FAQ"
     
     # AI generated fields (with default/heuristic fallbacks)
     farmer_strategy: str = "Sell Immediately (Prevent Losses)"

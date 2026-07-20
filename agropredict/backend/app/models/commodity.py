@@ -97,6 +97,8 @@ class PriceObservation(Base):
     max_price = Column(Float, nullable=True)
     modal_price = Column(Float, nullable=True)
     arrival_qty = Column(Float, nullable=True)  # in tonnes
+    variety = Column(String(100), nullable=True, default="FAQ")
+    grade = Column(String(100), nullable=True, default="FAQ")
 
     # Enforce idempotency at DB level
     __table_args__ = (

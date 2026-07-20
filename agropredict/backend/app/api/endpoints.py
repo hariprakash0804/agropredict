@@ -240,12 +240,17 @@ async def fetch_prices_from_api(
         max_price = r.get("Max_Price") or r.get("Max Price") or r.get("max_price") or r.get("Max_x0020_Price")
         modal_price = r.get("Modal_Price") or r.get("Modal Price") or r.get("modal_price") or r.get("Modal_x0020_Price")
         
+        variety = r.get("Variety") or r.get("variety") or "FAQ"
+        grade = r.get("Grade") or r.get("grade") or "FAQ"
+        
         try:
             parsed_records.append({
                 "date": obs_date,
                 "min_price": float(min_price) if min_price else None,
                 "max_price": float(max_price) if max_price else None,
                 "modal_price": float(modal_price) if modal_price else None,
+                "variety": str(variety).strip(),
+                "grade": str(grade).strip(),
             })
         except Exception:
             continue
@@ -392,12 +397,16 @@ async def get_history(
                     date=r["date"],
                     min_price=r["min_price"],
                     max_price=r["max_price"],
-                    modal_price=r["modal_price"]
+                    modal_price=r["modal_price"],
+                    variety=r.get("variety", "FAQ"),
+                    grade=r.get("grade", "FAQ")
                 )
                 stmt = stmt.on_duplicate_key_update(
                     min_price=stmt.inserted.min_price,
                     max_price=stmt.inserted.max_price,
-                    modal_price=stmt.inserted.modal_price
+                    modal_price=stmt.inserted.modal_price,
+                    variety=stmt.inserted.variety,
+                    grade=stmt.inserted.grade
                 )
                 await db.execute(stmt)
             await db.commit()
@@ -616,7 +625,7 @@ async def get_forecast(
         
     # 4. Fetch historical data (last 120 days to construct features/context)
     prices_res = await db.execute(
-        select(PriceObservation.date, PriceObservation.modal_price)
+        select(PriceObservation.date, PriceObservation.modal_price, PriceObservation.variety, PriceObservation.grade)
         .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
         .order_by(PriceObservation.date.desc())
         .limit(120)
@@ -636,19 +645,23 @@ async def get_forecast(
                     date=r["date"],
                     min_price=r["min_price"],
                     max_price=r["max_price"],
-                    modal_price=r["modal_price"]
+                    modal_price=r["modal_price"],
+                    variety=r.get("variety", "FAQ"),
+                    grade=r.get("grade", "FAQ")
                 )
                 stmt = stmt.on_duplicate_key_update(
                     min_price=stmt.inserted.min_price,
                     max_price=stmt.inserted.max_price,
-                    modal_price=stmt.inserted.modal_price
+                    modal_price=stmt.inserted.modal_price,
+                    variety=stmt.inserted.variety,
+                    grade=stmt.inserted.grade
                 )
                 await db.execute(stmt)
             await db.commit()
             
             # Re-fetch
             prices_res = await db.execute(
-                select(PriceObservation.date, PriceObservation.modal_price)
+                select(PriceObservation.date, PriceObservation.modal_price, PriceObservation.variety, PriceObservation.grade)
                 .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
                 .order_by(PriceObservation.date.desc())
                 .limit(120)
@@ -756,6 +769,14 @@ async def get_forecast(
         def_trader_strat = "Procure Spot Market"
         def_trader_adv = "Prices are trending down. Spot buying matches daily demand cycles best without locking high contract rates."
 
+    # Extract last variety and grade
+    last_variety = "FAQ"
+    last_grade = "FAQ"
+    if prices and len(prices[0]) > 2:
+        last_variety = prices[0][2] or "FAQ"
+    if prices and len(prices[0]) > 3:
+        last_grade = prices[0][3] or "FAQ"
+
     # Construct response
     forecast_response = ForecastResponse(
         commodity=commodity.name,
@@ -773,6 +794,8 @@ async def get_forecast(
                 precipitation_mm=w["precipitation_mm"]
             ) for w in future_weather
         ],
+        variety=last_variety,
+        grade=last_grade,
         farmer_strategy=ai_adv.get("farmer_strategy", def_farmer_strat) if ai_adv else def_farmer_strat,
         farmer_advisory=ai_adv.get("farmer_advisory", def_farmer_adv) if ai_adv else def_farmer_adv,
         trader_strategy=ai_adv.get("trader_strategy", def_trader_strat) if ai_adv else def_trader_strat,

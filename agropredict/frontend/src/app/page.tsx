@@ -58,6 +58,8 @@ interface ForecastRes {
   trader_advisory?: string;
   rainfall_disruption_risk?: string;
   heat_stress_risk?: string;
+  variety?: string;
+  grade?: string;
 }
 
 interface AccuracyObs {
@@ -1299,6 +1301,14 @@ export default function Home() {
                         <div className="flex justify-between items-center p-2 rounded-lg bg-zinc-800/30">
                           <span className="text-zinc-350">Active Mandi</span>
                           <span className="font-bold text-zinc-250">{forecast?.mandi || "Salem"}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 rounded-lg bg-zinc-800/30">
+                          <span className="text-zinc-350">Variety</span>
+                          <span className="font-bold text-zinc-250 text-emerald-400">{forecast?.variety || "FAQ"}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 rounded-lg bg-zinc-800/30">
+                          <span className="text-zinc-350">Grade</span>
+                          <span className="font-bold text-zinc-250 text-teal-400">{forecast?.grade || "FAQ"}</span>
                         </div>
                       </div>
                     </div>
