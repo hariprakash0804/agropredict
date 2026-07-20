@@ -454,7 +454,7 @@ export default function Home() {
     const element = document.createElement("a");
     const file = new Blob([textContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `agropredict_advisor_report.txt`;
+    element.download = `agropredict_report_${forecast.commodity.toLowerCase()}_${forecast.mandi.toLowerCase().replace(/\s+/g, '_')}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -952,7 +952,7 @@ export default function Home() {
                     📄 Download AI Report
                   </button>
                   <button
-                    onClick={() => downloadChartSVG(".price-chart-container", "agropredict_price_forecast_chart.svg")}
+                    onClick={() => downloadChartSVG(".price-chart-container", `agropredict_chart_${forecast.commodity.toLowerCase()}_${forecast.mandi.toLowerCase().replace(/\s+/g, '_')}.svg`)}
                     title="Export the main forecast chart as standard vector SVG"
                     className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
                   >
