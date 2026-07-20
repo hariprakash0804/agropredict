@@ -267,6 +267,21 @@ async def get_mandis(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 
+@router.get("/debug-db")
+async def debug_db(db: AsyncSession = Depends(get_db)):
+    m_res = await db.execute(select(Mandi))
+    mandis = [{"id": m.id, "name": m.name} for m in m_res.scalars().all()]
+    
+    # Check if tadagapatty query works
+    t_res = await db.execute(select(Mandi).where(Mandi.name == "tadagapatty"))
+    t_mandi = t_res.scalar_one_or_none()
+    
+    return {
+        "mandis": mandis,
+        "tadagapatty_resolved": {"id": t_mandi.id, "name": t_mandi.name} if t_mandi else None
+    }
+
+
 @router.get("/history/{commodity_slug}/{mandi_name}", response_model=HistoryResponse, tags=["Forecasting"])
 async def get_history(
     commodity_slug: str,
