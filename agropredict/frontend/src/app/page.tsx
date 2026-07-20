@@ -806,7 +806,16 @@ export default function Home() {
   const downloadChartSVG = (selector: string, filename: string) => {
     const wrapper = document.querySelector(selector);
     if (!wrapper) return;
-    const svg = wrapper.querySelector("svg.recharts-surface") || wrapper.querySelector("svg");
+    
+    const svgs = Array.from(wrapper.querySelectorAll("svg"));
+    const svg = svgs.find(s => {
+      const isLegend = s.closest(".recharts-legend-wrapper") !== null;
+      const wAttr = s.getAttribute("width");
+      const widthVal = wAttr ? parseFloat(wAttr) : 0;
+      const isTiny = wAttr !== null && !isNaN(widthVal) && widthVal < 50;
+      return !isLegend && !isTiny;
+    }) || svgs[0];
+    
     if (!svg) return;
     
     try {
