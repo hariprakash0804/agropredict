@@ -27,13 +27,13 @@ numpy==1.26.4
 lightgbm==4.5.0
 scikit-learn==1.6.1
 
---extra-index-url https://download.pytorch.org/whl/cpu
+# --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Forecasting - primary (Chronos-2)
-chronos-forecasting>=0.2.0
-torch
-transformers
-peft
+# Forecasting - primary (Chronos-2) — disabled to prevent Render OOM
+# chronos-forecasting>=0.2.0
+# torch
+# transformers
+# peft
 
 # Scheduling (replaces n8n)
 apscheduler==3.10.4

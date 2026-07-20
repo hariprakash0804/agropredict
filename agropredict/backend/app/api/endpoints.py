@@ -549,20 +549,25 @@ async def get_forecast(
     forecast_dates = future_weather_df["date"].tolist()
     
     if model_winner == "chronos":
-        # Lazy load Chronos-2 forecaster from application state
-        if not hasattr(request.app.state, "chronos_forecaster"):
-            print("Lazy loading Chronos2Forecaster...")
-            from app.forecasting.chronos_forecaster import Chronos2Forecaster
-            request.app.state.chronos_forecaster = Chronos2Forecaster()
-        forecaster = request.app.state.chronos_forecaster
-        forecasts = forecaster.forecast(
-            history_df=merged_history,
-            horizon=horizon,
-            future_weather_df=future_weather_df
-        )
-        p10 = list(forecasts["p10"])
-        p50 = list(forecasts["p50"])
-        p90 = list(forecasts["p90"])
+        # Run LightGBM Machine Learning Forecaster instead of Chronos-2 to fit inside the 512MB RAM limit
+        from app.forecasting.baselines import LightGBMForecaster
+        forecaster = LightGBMForecaster(horizon=horizon)
+        forecaster.fit(merged_history)
+        predictions = forecaster.forecast(merged_history)
+        
+        # Calculate probabilistic quantile envelope (p10, p90) using historical price variance
+        last_price = float(merged_history["modal_price"].iloc[-1])
+        std_diff = merged_history["modal_price"].diff().std()
+        if pd.isna(std_diff) or std_diff == 0:
+            std_diff = last_price * 0.05
+            
+        p50 = list(predictions)
+        p10 = [p50[step] - 1.645 * std_diff * np.sqrt(step + 1) for step in range(horizon)]
+        p90 = [p50[step] + 1.645 * std_diff * np.sqrt(step + 1) for step in range(horizon)]
+        
+        p10 = [max(0.0, float(v)) for v in p10]
+        p90 = [max(0.0, float(v)) for v in p90]
+        p50 = [float(v) for v in p50]
     else:
         # NAIVE baseline model
         last_price = float(merged_history["modal_price"].iloc[-1])
