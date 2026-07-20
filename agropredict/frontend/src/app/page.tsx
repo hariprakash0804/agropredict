@@ -811,14 +811,42 @@ export default function Home() {
     
     try {
       const serializer = new XMLSerializer();
-      let svgContent = serializer.serializeToString(svg);
       
-      const rect = svg.getBoundingClientRect();
-      const width = rect.width || 800;
-      const height = rect.height || 400;
+      // Safeguard dimensions parsing
+      let chartWidth = 800;
+      let chartHeight = 400;
       
-      const wrapperWidth = width + 60;
-      const wrapperHeight = height + 100;
+      const wAttr = svg.getAttribute("width");
+      const hAttr = svg.getAttribute("height");
+      
+      if (wAttr && !wAttr.includes("%")) {
+        const val = parseFloat(wAttr);
+        if (!isNaN(val) && val > 50) chartWidth = val;
+      } else {
+        const rect = svg.getBoundingClientRect();
+        if (rect.width && rect.width > 50) chartWidth = rect.width;
+      }
+      
+      if (hAttr && !hAttr.includes("%")) {
+        const val = parseFloat(hAttr);
+        if (!isNaN(val) && val > 50) chartHeight = val;
+      } else {
+        const rect = svg.getBoundingClientRect();
+        if (rect.height && rect.height > 50) chartHeight = rect.height;
+      }
+      
+      // Ensure fallbacks are applied if calculations are collapsed/zero
+      if (chartWidth < 200) chartWidth = 800;
+      if (chartHeight < 100) chartHeight = 400;
+      
+      const wrapperWidth = chartWidth + 60;
+      const wrapperHeight = chartHeight + 100;
+      
+      // Extract only inner content (children of svg) to prevent duplicate svg tag issues
+      let innerContent = "";
+      for (let i = 0; i < svg.childNodes.length; i++) {
+        innerContent += serializer.serializeToString(svg.childNodes[i]);
+      }
       
       const titleText = filename.replace('agropredict_', '').replace('.svg', '').replace(/_/g, ' ').toUpperCase();
       
@@ -833,7 +861,7 @@ export default function Home() {
         <text x="30" y="38" fill="#ffffff" font-size="16" font-weight="bold">${titleText}</text>
         <text x="30" y="58" fill="#71717a" font-size="11" font-weight="medium">AgroPredict Market Analytics Platform</text>
         <g transform="translate(30, 80)">
-          ${svgContent}
+          ${innerContent}
         </g>
       </svg>`;
       
