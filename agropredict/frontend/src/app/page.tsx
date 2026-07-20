@@ -524,15 +524,33 @@ export default function Home() {
     
     try {
       const serializer = new XMLSerializer();
-      let source = serializer.serializeToString(svg);
-      if (!source.includes('xmlns="')) {
-          source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-      }
-      if (!source.includes('xmlns:xlink="')) {
-          source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-      }
+      let svgContent = serializer.serializeToString(svg);
       
-      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+      const rect = svg.getBoundingClientRect();
+      const width = rect.width || 800;
+      const height = rect.height || 400;
+      
+      const wrapperWidth = width + 60;
+      const wrapperHeight = height + 100;
+      
+      const titleText = filename.replace('agropredict_', '').replace('.svg', '').replace(/_/g, ' ').toUpperCase();
+      
+      let wrappedSvg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${wrapperWidth}" height="${wrapperHeight}" viewBox="0 0 ${wrapperWidth} ${wrapperHeight}">
+        <style>
+          text { font-family: system-ui, -apple-system, sans-serif !important; }
+          .recharts-text { fill: #a1a1aa !important; }
+          .recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line { stroke: #27272a !important; }
+          .recharts-legend-item-text { fill: #e4e4e7 !important; }
+        </style>
+        <rect width="100%" height="100%" fill="#0c0c0e" rx="16" />
+        <text x="30" y="38" fill="#ffffff" font-size="16" font-weight="bold">${titleText}</text>
+        <text x="30" y="58" fill="#71717a" font-size="11" font-weight="medium">AgroPredict Market Analytics Platform</text>
+        <g transform="translate(30, 80)">
+          ${svgContent}
+        </g>
+      </svg>`;
+      
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(wrappedSvg);
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
@@ -690,12 +708,22 @@ export default function Home() {
 
   // Weather combination chart data
   const getWeatherChartData = () => {
-    if (!forecast) return [];
-    return forecast.weather_covariates.map((w) => ({
+    if (!history) return [];
+    const histPoints = history.weather ? history.weather.map((w) => ({
       date: w.date,
-      temp_max: w.temp_max,
-      precip: w.precipitation_mm,
-    }));
+      temp_max_hist: w.temp_max,
+      temp_min_hist: w.temp_min,
+      precip_hist: w.precipitation_mm,
+    })) : [];
+
+    const forePoints = forecast?.weather_covariates ? forecast.weather_covariates.map((w) => ({
+      date: w.date,
+      temp_max_fore: w.temp_max,
+      temp_min_fore: w.temp_min,
+      precip_fore: w.precipitation_mm,
+    })) : [];
+
+    return [...histPoints, ...forePoints];
   };
 
   // Compute insights
@@ -1155,23 +1183,44 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Weather Covariates Chart */}
+              {/* Weather Trend Outlook Chart */}
               <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
-                <div>
-                  <h3 className="text-sm font-bold text-zinc-200">Weather Covariate Outlook</h3>
-                  <p className="text-xs text-zinc-500">Live forecast weather parameters loaded into Chronos-2 model</p>
+                <div className="flex flex-wrap justify-between items-start gap-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-zinc-200">Weather Trend Outlook</h3>
+                    <p className="text-xs text-zinc-500">Historical & forecast weather parameters at mandi location</p>
+                  </div>
+                  <button
+                    onClick={() => downloadChartSVG(".weather-chart-container", `agropredict_weather_${forecast?.commodity.toLowerCase() || "commodity"}_${forecast?.mandi.toLowerCase().replace(/\s+/g, '_') || "mandi"}.svg`)}
+                    title="Export the weather outlook chart as standard vector SVG"
+                    className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all"
+                  >
+                    📈 Export Weather (SVG)
+                  </button>
                 </div>
-                <div className="h-[150px] w-full">
+                <div className="h-[220px] w-full weather-chart-container">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={getWeatherChartData()} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                       <XAxis dataKey="date" stroke="#71717a" fontSize={9} tickLine={false} />
-                      <YAxis yAxisId="left" stroke="#38bdf8" fontSize={9} tickLine={false} label={{ value: "Temp (°C)", angle: -90, position: "insideLeft", fill: "#38bdf8", style: { fontSize: "9px" } }} />
-                      <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={9} tickLine={false} label={{ value: "Rain (mm)", angle: 90, position: "insideRight", fill: "#60a5fa", style: { fontSize: "9px" } }} />
-                      <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: "8px" }} />
+                      <YAxis yAxisId="left" stroke="#71717a" fontSize={9} tickLine={false} label={{ value: "Temp (°C)", angle: -90, position: "insideLeft", fill: "#ef4444", style: { fontSize: "9px" } }} />
+                      <YAxis yAxisId="right" orientation="right" stroke="#71717a" fontSize={9} tickLine={false} label={{ value: "Rain (mm)", angle: 90, position: "insideRight", fill: "#3b82f6", style: { fontSize: "9px" } }} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: "8px" }}
+                        labelStyle={{ color: "#a1a1aa", fontSize: "11px", fontWeight: "bold" }}
+                        itemStyle={{ fontSize: "12px" }}
+                      />
                       <Legend wrapperStyle={{ fontSize: "10px" }} />
-                      <Line yAxisId="left" type="monotone" dataKey="temp_max" stroke="#38bdf8" strokeWidth={1.5} dot={false} name="Max Temp (°C)" />
-                      <Line yAxisId="right" type="monotone" dataKey="precip" stroke="#60a5fa" strokeWidth={1.5} dot={false} name="Precipitation (mm)" />
+                      
+                      {/* Temperature Lines */}
+                      <Line yAxisId="left" type="monotone" dataKey="temp_max_hist" stroke="#ef4444" strokeWidth={1.5} dot={false} name="Hist Max Temp (°C)" connectNulls={true} />
+                      <Line yAxisId="left" type="monotone" dataKey="temp_max_fore" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="5 5" dot={false} name="Forecast Max Temp (°C)" connectNulls={true} />
+                      <Line yAxisId="left" type="monotone" dataKey="temp_min_hist" stroke="#fb923c" strokeWidth={1.5} dot={false} name="Hist Min Temp (°C)" connectNulls={true} />
+                      <Line yAxisId="left" type="monotone" dataKey="temp_min_fore" stroke="#fb923c" strokeWidth={1.5} strokeDasharray="5 5" dot={false} name="Forecast Min Temp (°C)" connectNulls={true} />
+                      
+                      {/* Rain (Precipitation) Lines */}
+                      <Line yAxisId="right" type="monotone" dataKey="precip_hist" stroke="#3b82f6" strokeWidth={1.5} dot={false} name="Hist Rain (mm)" connectNulls={true} />
+                      <Line yAxisId="right" type="monotone" dataKey="precip_fore" stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="5 5" dot={false} name="Forecast Rain (mm)" connectNulls={true} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -1402,14 +1451,10 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
             </div>
-
           </div>
         )}
-
       </main>
-
       {/* Footer */}
       <footer className="border-t border-zinc-800/80 bg-zinc-950 py-6 text-center text-xs text-zinc-600">
         <p>© 2026 AgroPredict. Dynamic cross-mandi geocoding and covariate forecasting active.</p>
