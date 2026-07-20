@@ -842,11 +842,14 @@ export default function Home() {
       const wrapperWidth = chartWidth + 60;
       const wrapperHeight = chartHeight + 100;
       
-      // Extract only inner content (children of svg) to prevent duplicate svg tag issues
-      let innerContent = "";
-      for (let i = 0; i < svg.childNodes.length; i++) {
-        innerContent += serializer.serializeToString(svg.childNodes[i]);
-      }
+      // Clone the SVG element to modify its attributes safely to absolute values
+      const clonedSvg = svg.cloneNode(true) as SVGSVGElement;
+      clonedSvg.setAttribute("width", chartWidth.toString());
+      clonedSvg.setAttribute("height", chartHeight.toString());
+      clonedSvg.removeAttribute("style");
+      
+      // Serialize the cloned SVG (keeps coordinate system and clipPaths intact)
+      let svgContent = serializer.serializeToString(clonedSvg);
       
       const titleText = filename.replace('agropredict_', '').replace('.svg', '').replace(/_/g, ' ').toUpperCase();
       
@@ -861,7 +864,7 @@ export default function Home() {
         <text x="30" y="38" fill="#ffffff" font-size="16" font-weight="bold">${titleText}</text>
         <text x="30" y="58" fill="#71717a" font-size="11" font-weight="medium">AgroPredict Market Analytics Platform</text>
         <g transform="translate(30, 80)">
-          ${innerContent}
+          ${svgContent}
         </g>
       </svg>`;
       
