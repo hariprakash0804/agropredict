@@ -334,10 +334,16 @@ async def get_history(
             db.add(commodity)
             await db.commit()
             await db.refresh(commodity)
-        except Exception:
+        except Exception as e:
             await db.rollback()
+            print(f"Error creating commodity {commodity_slug}: {e}")
             comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
-            commodity = comm_res.scalar_one()
+            commodity = comm_res.scalar_one_or_none()
+            if not commodity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to resolve or dynamically create commodity '{commodity_slug}'"
+                )
         
     # 3. Get or create Mandi
     mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
@@ -352,10 +358,16 @@ async def get_history(
             await db.refresh(mandi)
             # Backfill weather observations for the new mandi dynamically
             await backfill_weather_for_mandi(db, mandi.id, lat, lon, today - timedelta(days=365), today)
-        except Exception:
+        except Exception as e:
             await db.rollback()
+            print(f"Error creating mandi {mandi_name}: {e}")
             mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
-            mandi = mandi_res.scalar_one()
+            mandi = mandi_res.scalar_one_or_none()
+            if not mandi:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to resolve or dynamically create mandi location '{mandi_name}'"
+                )
 
     print(f"[DEBUG] get_history mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
 
@@ -496,10 +508,16 @@ async def get_forecast(
             db.add(commodity)
             await db.commit()
             await db.refresh(commodity)
-        except Exception:
+        except Exception as e:
             await db.rollback()
+            print(f"Error creating commodity {commodity_slug}: {e}")
             comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
-            commodity = comm_res.scalar_one()
+            commodity = comm_res.scalar_one_or_none()
+            if not commodity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to resolve or dynamically create commodity '{commodity_slug}'"
+                )
         
     # 3. Get or create Mandi
     mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
@@ -514,10 +532,16 @@ async def get_forecast(
             await db.refresh(mandi)
             # Backfill weather observations for the new mandi dynamically
             await backfill_weather_for_mandi(db, mandi.id, lat, lon, date.today() - timedelta(days=365), date.today())
-        except Exception:
+        except Exception as e:
             await db.rollback()
+            print(f"Error creating mandi {mandi_name}: {e}")
             mandi_res = await db.execute(select(Mandi).where(Mandi.name == mandi_name))
-            mandi = mandi_res.scalar_one()
+            mandi = mandi_res.scalar_one_or_none()
+            if not mandi:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to resolve or dynamically create mandi location '{mandi_name}'"
+                )
 
     print(f"[DEBUG] get_forecast mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
         
@@ -593,7 +617,7 @@ async def get_forecast(
     # Onion, Potato, Tomato use CHRONOS-2. Tur Dal uses NAIVE.
     model_winner = "chronos" if commodity_slug in ["onion", "potato", "tomato"] else "naive"
     
-    forecast_dates = future_weather_df["date"].tolist()
+    forecast_dates = [w["date"] for w in future_weather]
     
     if model_winner == "chronos":
         # Run LightGBM Machine Learning Forecaster instead of Chronos-2 to fit inside the 512MB RAM limit
@@ -687,7 +711,7 @@ async def get_accuracy(
     comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
     commodity = comm_res.scalar_one_or_none()
     if not commodity:
-        raise HTTPException(status_code=404, detail="Commodity not found")
+        return []
         
     # Query accuracy observations
     accuracy_res = await db.execute(
