@@ -52,6 +52,12 @@ interface ForecastRes {
   p50: number[];
   p90: number[];
   weather_covariates: WeatherObs[];
+  farmer_strategy?: string;
+  farmer_advisory?: string;
+  trader_strategy?: string;
+  trader_advisory?: string;
+  rainfall_disruption_risk?: string;
+  heat_stress_risk?: string;
 }
 
 interface AccuracyObs {
@@ -1264,15 +1270,17 @@ export default function Home() {
                     {/* Recommendation Card */}
                     <div className="p-3.5 rounded-xl bg-zinc-800/50 border border-zinc-700/40">
                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">Suggested Strategy</p>
-                      {insights.trend === "up" ? (
-                        <p className="text-emerald-400 font-bold mt-1 text-sm">Hold Crop (Price Expected to Rise)</p>
-                      ) : (
-                        <p className="text-rose-400 font-bold mt-1 text-sm">Sell Immediately (Prevent Losses)</p>
-                      )}
+                      <p className={`font-bold mt-1 text-sm ${
+                        (forecast?.farmer_strategy || "").toLowerCase().includes("hold") 
+                          ? "text-emerald-400" 
+                          : (forecast?.farmer_strategy || "").toLowerCase().includes("sell") 
+                          ? "text-rose-400" 
+                          : "text-amber-400"
+                      }`}>
+                        {forecast?.farmer_strategy || "Sell Immediately (Prevent Losses)"}
+                      </p>
                       <p className="text-zinc-400 mt-1.5 leading-relaxed">
-                        {insights.trend === "up" 
-                          ? `Prices at this market are forecasted to increase by ${insights.changePct.toFixed(1)}% over the next ${horizon} days. Holding inventory might yield better returns.`
-                          : `Prices are expected to decline. Selling your harvest now secures the current modal rate of ₹${history?.prices[history.prices.length - 1]?.modal_price || 0}/Qtl.`}
+                        {forecast?.farmer_advisory}
                       </p>
                     </div>
 
@@ -1303,12 +1311,10 @@ export default function Home() {
                     <div className="p-3.5 rounded-xl bg-zinc-800/50 border border-zinc-700/40">
                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">Procurement Advisory</p>
                       <p className="text-teal-400 font-bold mt-1 text-sm">
-                        {insights.trend === "up" ? "Lock Futures Contracts" : "Procure Spot Market"}
+                        {forecast?.trader_strategy || "Procure Spot Market"}
                       </p>
                       <p className="text-zinc-400 mt-1.5 leading-relaxed">
-                        {insights.trend === "up"
-                          ? `With a ${insights.changePct.toFixed(1)}% upward trend forecast, locking in purchase agreements at today's rates avoids future cost inflation.`
-                          : `Prices are trending down. Spot buying matches daily demand cycles best without locking high contract rates.`}
+                        {forecast?.trader_advisory}
                       </p>
                     </div>
 
@@ -1320,14 +1326,30 @@ export default function Home() {
                           <CloudRain className="w-4 h-4 text-sky-400" />
                           <span className="text-zinc-350">Rainfall Disruption</span>
                         </div>
-                        <span className="font-bold text-zinc-250">Minimal</span>
+                        <span className={`font-bold ${
+                          (forecast?.rainfall_disruption_risk || "").toLowerCase().includes("minimal") || (forecast?.rainfall_disruption_risk || "").toLowerCase().includes("low")
+                            ? "text-emerald-400"
+                            : (forecast?.rainfall_disruption_risk || "").toLowerCase().includes("moderate")
+                            ? "text-amber-400"
+                            : "text-rose-400"
+                        }`}>
+                          {forecast?.rainfall_disruption_risk || "Minimal"}
+                        </span>
                       </div>
                       <div className="p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/30 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Thermometer className="w-4 h-4 text-amber-500" />
                           <span className="text-zinc-350">Heat Stress Risk</span>
                         </div>
-                        <span className="font-bold text-zinc-250">Low</span>
+                        <span className={`font-bold ${
+                          (forecast?.heat_stress_risk || "").toLowerCase().includes("low") || (forecast?.heat_stress_risk || "").toLowerCase().includes("minimal")
+                            ? "text-emerald-400"
+                            : (forecast?.heat_stress_risk || "").toLowerCase().includes("moderate")
+                            ? "text-amber-400"
+                            : "text-rose-400"
+                        }`}>
+                          {forecast?.heat_stress_risk || "Low"}
+                        </span>
                       </div>
                     </div>
 

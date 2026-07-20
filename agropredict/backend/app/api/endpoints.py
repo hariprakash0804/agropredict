@@ -468,6 +468,75 @@ async def log_forecast_to_db(
             print(f"Error logging forecast to DB: {e}")
 
 
+async def generate_ai_advisory(
+    commodity_name: str,
+    mandi_name: str,
+    state: str,
+    district: str,
+    horizon: int,
+    last_price: float,
+    start_p50: float,
+    end_p50: float,
+    avg_temp_max: float,
+    total_rain: float,
+) -> dict:
+    """Query OpenRouter to generate tailored agricultural/trading advisories and yield risk scores."""
+    api_key = get_settings().OPENROUTER_API_KEY
+    if not api_key or api_key == "your_openrouter_api_key_here" or api_key == "":
+        print("[DEBUG] OpenRouter key missing, using fallback heuristics.")
+        return {}
+
+    # Check price trend direction
+    price_change_pct = ((end_p50 - last_price) / last_price) * 100 if last_price else 0
+    trend_dir = "upward" if price_change_pct > 5 else "downward" if price_change_pct < -5 else "stable"
+
+    prompt = (
+        f"Analyze this market data for '{commodity_name}' at '{mandi_name}' market ({state}, {district}):\n\n"
+        f"--- PRICE DATA ---\n"
+        f"- Last observed price: ₹{last_price:.0f}/Qtl.\n"
+        f"- Projected p50 price trend for next {horizon} days: starting at ₹{start_p50:.0f}, ending at ₹{end_p50:.0f} ({trend_dir} trend of {price_change_pct:.1f}%).\n\n"
+        f"--- WEATHER DATA ---\n"
+        f"- Forecasted Average Max Temp: {avg_temp_max:.1f}°C.\n"
+        f"- Forecasted Total Precipitation: {total_rain:.1f} mm total rain over next {horizon} days.\n\n"
+        f"Based on this data, return a JSON object with exactly the following fields:\n"
+        f"1. 'farmer_strategy': a short, punchy strategy title for farmers (e.g. 'Hold Crop', 'Sell Immediately', 'Gradual Selling').\n"
+        f"2. 'farmer_advisory': a brief, actionable advice (max 2 sentences) telling the farmer what to do with their crop and why, based on the price trend.\n"
+        f"3. 'trader_strategy': a short, punchy procurement advice title (e.g. 'Procure Spot Market', 'Lock Futures Contracts', 'Reduce Procurement').\n"
+        f"4. 'trader_advisory': a brief, actionable advice (max 2 sentences) telling traders/buyers how to schedule procurement to optimize margins.\n"
+        f"5. 'rainfall_disruption_risk': risk level for supply chain disruption due to precipitation ('Minimal', 'Moderate', 'High', or 'Severe'). Choose based on total rain (e.g., >50mm over 30 days is Moderate, >150mm is High, >300mm is Severe).\n"
+        f"6. 'heat_stress_risk': risk level for crop heat stress ('Low', 'Moderate', 'High', or 'Extreme'). Choose based on temp (e.g., >35C is Moderate, >40C is High, >45C is Extreme).\n\n"
+        f"Return ONLY valid JSON. Do not include any markdown styling like ```json or ```."
+    )
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://agropredict.local",
+        "X-Title": "AgroPredict Dashboard",
+    }
+
+    payload = {
+        "model": "openrouter/free",
+        "messages": [
+            {"role": "system", "content": "You are a helpful, expert AI agricultural economist. Return ONLY valid JSON."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=12.0)
+            if resp.status_code == 200:
+                res_data = resp.json()
+                content = res_data["choices"][0]["message"]["content"].strip()
+                if content.startswith("```"):
+                    content = content.replace("```json", "").replace("```", "").strip()
+                return json.loads(content)
+    except Exception as e:
+        print(f"[DEBUG] OpenRouter AI advisory generation failed: {e}")
+    return {}
+
+
 @router.get("/forecast/{commodity_slug}/{mandi_name}", response_model=ForecastResponse, tags=["Forecasting"])
 async def get_forecast(
     request: Request,
@@ -656,6 +725,37 @@ async def get_forecast(
         p90 = [max(0.0, float(v)) for v in p90]
         p50 = [float(v) for v in p50]
         
+    # Call OpenRouter to generate AI-tailored advisories and risks
+    last_p = float(merged_history["modal_price"].iloc[-1]) if not merged_history.empty else 1000.0
+    avg_temp_max = np.mean([w["temp_max"] for w in future_weather]) if future_weather else 30.0
+    total_rain = np.sum([w["precipitation_mm"] for w in future_weather]) if future_weather else 0.0
+    
+    ai_adv = await generate_ai_advisory(
+        commodity_name=commodity.name,
+        mandi_name=mandi.name,
+        state=state,
+        district=district,
+        horizon=horizon,
+        last_price=last_p,
+        start_p50=p50[0],
+        end_p50=p50[-1],
+        avg_temp_max=avg_temp_max,
+        total_rain=total_rain
+    )
+
+    # Build default fallback values based on trend
+    price_change_pct = ((p50[-1] - last_p) / last_p) * 100 if last_p else 0
+    if price_change_pct > 5:
+        def_farmer_strat = "Hold Crop (Price Expected to Rise)"
+        def_farmer_adv = f"Prices at this market are forecasted to increase by {price_change_pct:.1f}% over the next {horizon} days. Holding inventory might yield better returns."
+        def_trader_strat = "Lock Futures Contracts"
+        def_trader_adv = f"With a {price_change_pct:.1f}% upward trend forecast, locking in purchase agreements at today's rates avoids future cost inflation."
+    else:
+        def_farmer_strat = "Sell Immediately (Prevent Losses)"
+        def_farmer_adv = f"Prices are expected to decline. Selling your harvest now secures the current modal rate of ₹{last_p:.0f}/Qtl."
+        def_trader_strat = "Procure Spot Market"
+        def_trader_adv = "Prices are trending down. Spot buying matches daily demand cycles best without locking high contract rates."
+
     # Construct response
     forecast_response = ForecastResponse(
         commodity=commodity.name,
@@ -672,7 +772,13 @@ async def get_forecast(
                 temp_min=w["temp_min"],
                 precipitation_mm=w["precipitation_mm"]
             ) for w in future_weather
-        ]
+        ],
+        farmer_strategy=ai_adv.get("farmer_strategy", def_farmer_strat) if ai_adv else def_farmer_strat,
+        farmer_advisory=ai_adv.get("farmer_advisory", def_farmer_adv) if ai_adv else def_farmer_adv,
+        trader_strategy=ai_adv.get("trader_strategy", def_trader_strat) if ai_adv else def_trader_strat,
+        trader_advisory=ai_adv.get("trader_advisory", def_trader_adv) if ai_adv else def_trader_adv,
+        rainfall_disruption_risk=ai_adv.get("rainfall_disruption_risk", "Minimal") if ai_adv else "Minimal",
+        heat_stress_risk=ai_adv.get("heat_stress_risk", "Low") if ai_adv else "Low"
     )
     
     # Save to Redis Cache (24-hour TTL)

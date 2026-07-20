@@ -57,6 +57,14 @@ class ForecastResponse(BaseModel):
     p50: List[float]
     p90: List[float]
     weather_covariates: List[WeatherObservationOut]
+    
+    # AI generated fields (with default/heuristic fallbacks)
+    farmer_strategy: str = "Sell Immediately (Prevent Losses)"
+    farmer_advisory: str = "Prices are expected to decline. Selling your harvest now secures the current modal rate."
+    trader_strategy: str = "Procure Spot Market"
+    trader_advisory: str = "Prices are trending down. Spot buying matches daily demand cycles best without locking high contract rates."
+    rainfall_disruption_risk: str = "Minimal"
+    heat_stress_risk: str = "Low"
 
 
 class HistoryResponse(BaseModel):
