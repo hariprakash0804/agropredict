@@ -164,9 +164,38 @@ const DEFAULT_METADATA: AgmarknetMetadata = {
   commodities: ["Apple", "Onion", "Potato", "Tomato", "Arhar (Tur/Red Gram)(Whole)", "Garlic", "Ginger", "Green Chilli"]
 };
 
+const COMMON_VARIETIES = [
+  "All",
+  "FAQ",
+  "Local",
+  "Red",
+  "White",
+  "Nasik",
+  "Other",
+  "Desi",
+  "Hybrid",
+  "Jyoti",
+  "Chandramukhi",
+  "Fine",
+  "Coarse"
+];
+
+const COMMON_GRADES = [
+  "All",
+  "FAQ",
+  "Large",
+  "Medium",
+  "Small",
+  "Grade I",
+  "Grade II",
+  "Super"
+];
+
 export default function Home() {
   const [commodities, setCommodities] = useState<{ id: number; name: string; slug: string }[]>([]);
   const [mandis, setMandis] = useState<{ id: number; name: string; state: string; district: string }[]>([]);
+  const [selectedVariety, setSelectedVariety] = useState<string>("All");
+  const [selectedGrade, setSelectedGrade] = useState<string>("All");
   
   // User Auth & History States
   interface UserSession {
@@ -623,6 +652,8 @@ export default function Home() {
         district: districtName,
         start_date: startDate,
         end_date: endDate,
+        variety: useCustom ? selectedVariety : "All",
+        grade: useCustom ? selectedGrade : "All",
       });
 
       // Fetch history first to resolve and ingest commodity/mandi without parallel DB write conflicts
@@ -637,7 +668,7 @@ export default function Home() {
 
       // Fetch forecast and accuracy in parallel (since commodity and mandi are now guaranteed to exist in DB)
       const [foreRes, accRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}`),
+        fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}&variety=${useCustom ? selectedVariety : "All"}&grade=${useCustom ? selectedGrade : "All"}`),
         fetch(`${API_BASE_URL}/accuracy/${commSlug}?horizon=${horizon}`),
       ]);
 
@@ -917,7 +948,7 @@ export default function Home() {
           
           {useCustom ? (
             /* Custom Form for All Commodities/States/Districts/Dates */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-end">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Commodity</label>
                 <select
@@ -966,6 +997,32 @@ export default function Home() {
                 >
                   {(metadata.states[stateName]?.[districtName] || []).map((m) => (
                     <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Variety</label>
+                <select
+                  value={selectedVariety}
+                  onChange={(e) => setSelectedVariety(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {COMMON_VARIETIES.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Grade</label>
+                <select
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {COMMON_GRADES.map((g) => (
+                    <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
               </div>

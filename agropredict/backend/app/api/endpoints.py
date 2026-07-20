@@ -164,6 +164,8 @@ async def fetch_prices_from_api(
     commodity_name: str,
     start_date: date,
     end_date: date,
+    variety: Optional[str] = None,
+    grade: Optional[str] = None,
 ) -> List[dict]:
     """
     Fetch prices from data.gov.in dynamically for any state/district/mandi/commodity.
@@ -184,6 +186,10 @@ async def fetch_prices_from_api(
         "filters[District]": district,
         "filters[Commodity]": commodity_name,
     }
+    if variety and variety != "All":
+        params["filters[Variety]"] = variety
+    if grade and grade != "All":
+        params["filters[Grade]"] = grade
     
     records = []
     try:
@@ -205,6 +211,10 @@ async def fetch_prices_from_api(
             "filters[district]": district,
             "filters[commodity]": commodity_name,
         }
+        if variety and variety != "All":
+            params_daily["filters[variety]"] = variety
+        if grade and grade != "All":
+            params_daily["filters[grade]"] = grade
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(daily_url, params=params_daily, headers=headers, timeout=20.0)
@@ -320,6 +330,8 @@ async def get_history(
     district: str = "Salem",
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    variety: Optional[str] = None,
+    grade: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     """Fetch historical price and weather observations for a commodity-mandi pair (pulling live if not cached)."""
@@ -377,21 +389,27 @@ async def get_history(
     print(f"[DEBUG] get_history mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
 
     # 4. Fetch prices from DB
-    prices_res = await db.execute(
+    # 4. Fetch prices from DB
+    stmt = (
         select(PriceObservation)
         .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
         .where(PriceObservation.date >= s_date, PriceObservation.date <= e_date)
-        .order_by(PriceObservation.date.desc())
     )
+    if variety and variety != "All":
+        stmt = stmt.where(PriceObservation.variety == variety)
+    if grade and grade != "All":
+        stmt = stmt.where(PriceObservation.grade == grade)
+        
+    prices_res = await db.execute(stmt.order_by(PriceObservation.date.desc()))
     prices = prices_res.scalars().all()
     
     # If no prices found locally, pull dynamically from API
     if len(prices) < 5:
         print(f"Dynamically fetching prices from data.gov.in for {commodity.name} at {mandi.name}...")
-        api_records = await fetch_prices_from_api(state, district, mandi_name, commodity.name, s_date, e_date)
+        api_records = await fetch_prices_from_api(state, district, mandi_name, commodity.name, s_date, e_date, variety, grade)
         if api_records:
             for r in api_records:
-                stmt = mysql_insert(PriceObservation).values(
+                stmt_ins = mysql_insert(PriceObservation).values(
                     commodity_id=commodity.id,
                     mandi_id=mandi.id,
                     date=r["date"],
@@ -401,23 +419,28 @@ async def get_history(
                     variety=r.get("variety", "FAQ"),
                     grade=r.get("grade", "FAQ")
                 )
-                stmt = stmt.on_duplicate_key_update(
-                    min_price=stmt.inserted.min_price,
-                    max_price=stmt.inserted.max_price,
-                    modal_price=stmt.inserted.modal_price,
-                    variety=stmt.inserted.variety,
-                    grade=stmt.inserted.grade
+                stmt_ins = stmt_ins.on_duplicate_key_update(
+                    min_price=stmt_ins.inserted.min_price,
+                    max_price=stmt_ins.inserted.max_price,
+                    modal_price=stmt_ins.inserted.modal_price,
+                    variety=stmt_ins.inserted.variety,
+                    grade=stmt_ins.inserted.grade
                 )
-                await db.execute(stmt)
+                await db.execute(stmt_ins)
             await db.commit()
             
             # Re-query prices
-            prices_res = await db.execute(
+            stmt_re = (
                 select(PriceObservation)
                 .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
                 .where(PriceObservation.date >= s_date, PriceObservation.date <= e_date)
-                .order_by(PriceObservation.date.desc())
             )
+            if variety and variety != "All":
+                stmt_re = stmt_re.where(PriceObservation.variety == variety)
+            if grade and grade != "All":
+                stmt_re = stmt_re.where(PriceObservation.grade == grade)
+                
+            prices_res = await db.execute(stmt_re.order_by(PriceObservation.date.desc()))
             prices = prices_res.scalars().all()
 
     # Reverse to chronological order
@@ -555,6 +578,8 @@ async def get_forecast(
     state: str = "Tamil Nadu",
     district: str = "Salem",
     horizon: int = 30,
+    variety: Optional[str] = None,
+    grade: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     redis = Depends(get_redis)
 ):
@@ -565,10 +590,10 @@ async def get_forecast(
     if horizon not in [7, 30]:
         raise HTTPException(status_code=400, detail="Horizon must be either 7 or 30 days")
 
-    print(f"[DEBUG] get_forecast called with commodity_slug={commodity_slug}, mandi_name={mandi_name}")
+    print(f"[DEBUG] get_forecast called with commodity_slug={commodity_slug}, mandi_name={mandi_name}, variety={variety}, grade={grade}")
         
     # 1. Check Redis Cache
-    cache_key = f"forecast:{commodity_slug}:{mandi_name}:{horizon}"
+    cache_key = f"forecast:{commodity_slug}:{mandi_name}:{horizon}:{variety}:{grade}"
     try:
         cached_data = await redis.get(cache_key)
         if cached_data:
@@ -624,22 +649,26 @@ async def get_forecast(
     print(f"[DEBUG] get_forecast mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
         
     # 4. Fetch historical data (last 120 days to construct features/context)
-    prices_res = await db.execute(
+    stmt = (
         select(PriceObservation.date, PriceObservation.modal_price, PriceObservation.variety, PriceObservation.grade)
         .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
-        .order_by(PriceObservation.date.desc())
-        .limit(120)
     )
+    if variety and variety != "All":
+        stmt = stmt.where(PriceObservation.variety == variety)
+    if grade and grade != "All":
+        stmt = stmt.where(PriceObservation.grade == grade)
+        
+    prices_res = await db.execute(stmt.order_by(PriceObservation.date.desc()).limit(120))
     prices = prices_res.all()
     
     # If no prices found locally, pull dynamically from API
     if len(prices) < 5:
         print(f"Dynamically fetching prices for forecasting from data.gov.in...")
         today = date.today()
-        api_records = await fetch_prices_from_api(state, district, mandi_name, commodity.name, today - timedelta(days=120), today)
+        api_records = await fetch_prices_from_api(state, district, mandi_name, commodity.name, today - timedelta(days=120), today, variety, grade)
         if api_records:
             for r in api_records:
-                stmt = mysql_insert(PriceObservation).values(
+                stmt_ins = mysql_insert(PriceObservation).values(
                     commodity_id=commodity.id,
                     mandi_id=mandi.id,
                     date=r["date"],
@@ -649,23 +678,27 @@ async def get_forecast(
                     variety=r.get("variety", "FAQ"),
                     grade=r.get("grade", "FAQ")
                 )
-                stmt = stmt.on_duplicate_key_update(
-                    min_price=stmt.inserted.min_price,
-                    max_price=stmt.inserted.max_price,
-                    modal_price=stmt.inserted.modal_price,
-                    variety=stmt.inserted.variety,
-                    grade=stmt.inserted.grade
+                stmt_ins = stmt_ins.on_duplicate_key_update(
+                    min_price=stmt_ins.inserted.min_price,
+                    max_price=stmt_ins.inserted.max_price,
+                    modal_price=stmt_ins.inserted.modal_price,
+                    variety=stmt_ins.inserted.variety,
+                    grade=stmt_ins.inserted.grade
                 )
-                await db.execute(stmt)
+                await db.execute(stmt_ins)
             await db.commit()
             
             # Re-fetch
-            prices_res = await db.execute(
+            stmt_re = (
                 select(PriceObservation.date, PriceObservation.modal_price, PriceObservation.variety, PriceObservation.grade)
                 .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
-                .order_by(PriceObservation.date.desc())
-                .limit(120)
             )
+            if variety and variety != "All":
+                stmt_re = stmt_re.where(PriceObservation.variety == variety)
+            if grade and grade != "All":
+                stmt_re = stmt_re.where(PriceObservation.grade == grade)
+                
+            prices_res = await db.execute(stmt_re.order_by(PriceObservation.date.desc()).limit(120))
             prices = prices_res.all()
             
     if not prices:
@@ -1051,5 +1084,4 @@ async def get_user_query_logs(user_id: int, db: AsyncSession = Depends(get_db)):
             created_at=l.created_at.isoformat()
         ) for l in logs
     ]
-
-
+    
