@@ -525,10 +525,10 @@ export default function Home() {
     try {
       const serializer = new XMLSerializer();
       let source = serializer.serializeToString(svg);
-      if(!source.match(/^<svg[^>]+xmlns="http\/\/www\.w3\.org\/2000\/svg"/)){
+      if (!source.includes('xmlns="')) {
           source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
       }
-      if(!source.match(/^<svg[^>]+xmlns:xlink="http\/\/www\.w3\.org\/1999\/xlink"/)){
+      if (!source.includes('xmlns:xlink="')) {
           source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
       }
       
