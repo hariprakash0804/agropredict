@@ -806,7 +806,7 @@ export default function Home() {
   const downloadChartSVG = (selector: string, filename: string) => {
     const wrapper = document.querySelector(selector);
     if (!wrapper) return;
-    const svg = wrapper.querySelector("svg");
+    const svg = wrapper.querySelector("svg.recharts-surface") || wrapper.querySelector("svg");
     if (!svg) return;
     
     try {
