@@ -704,7 +704,7 @@ async def get_forecast(
     if not prices:
         raise HTTPException(status_code=400, detail="No historical price data found or fetched for forecasting")
         
-    price_df = pd.DataFrame(prices, columns=["date", "modal_price"])
+    price_df = pd.DataFrame([(p[0], p[1]) for p in prices], columns=["date", "modal_price"])
     price_df = price_df.sort_values("date").reset_index(drop=True)
     
     # Fetch historical weather
