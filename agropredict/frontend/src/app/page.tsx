@@ -599,20 +599,29 @@ export default function Home() {
         end_date: endDate,
       });
 
-      const [histRes, foreRes, accRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/history/${commSlug}/${mandiVal}?${urlParams.toString()}`),
+      // Fetch history first to resolve and ingest commodity/mandi without parallel DB write conflicts
+      const histRes = await fetch(`${API_BASE_URL}/history/${commSlug}/${mandiVal}?${urlParams.toString()}`);
+      if (!histRes.ok) {
+        if (histRes.status === 400) {
+          throw new Error("No daily price records are available for this specific commodity/mandi combination on data.gov.in.");
+        }
+        throw new Error("Failed to query data from API.");
+      }
+      const histData = await histRes.json();
+
+      // Fetch forecast and accuracy in parallel (since commodity and mandi are now guaranteed to exist in DB)
+      const [foreRes, accRes] = await Promise.all([
         fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}`),
         fetch(`${API_BASE_URL}/accuracy/${commSlug}?horizon=${horizon}`),
       ]);
 
-      if (!histRes.ok || !foreRes.ok || !accRes.ok) {
-        if (histRes.status === 400 || foreRes.status === 400) {
+      if (!foreRes.ok || !accRes.ok) {
+        if (foreRes.status === 400) {
           throw new Error("No daily price records are available for this specific commodity/mandi combination on data.gov.in.");
         }
         throw new Error("Failed to query data from API.");
       }
 
-      const histData = await histRes.json();
       const foreData = await foreRes.json();
       const accData = await accRes.json();
 
