@@ -128,6 +128,34 @@ const renderMarkdown = (text: string) => {
   });
 };
 
+interface AgmarknetMetadata {
+  states: Record<string, Record<string, string[]>>;
+  commodities: string[];
+}
+
+const DEFAULT_METADATA: AgmarknetMetadata = {
+  states: {
+    "Tamil Nadu": {
+      "Salem": ["Sooramangalam", "Ammapet", "Thathakapatti", "tadagapatty"],
+      "Coimbatore": ["Coimbatore", "Mettupalayam", "Pollachi"],
+      "Madurai": ["Madurai", "Melur", "Thirumangalam"]
+    },
+    "Karnataka": {
+      "Bengaluru": ["Binny Mill (F&V)", "Yeshwanthpur"],
+      "Mysore": ["Mysore", "Nanjangud"]
+    },
+    "Kerala": {
+      "Ernakulam": ["Ernakulam", "Aluva"],
+      "Trivandrum": ["Trivandrum", "Nedumangad"]
+    },
+    "Maharashtra": {
+      "Pune": ["Pune", "Manchar", "Pimpri"],
+      "Mumbai": ["Mumbai", "Vashi (Fruit Market)"]
+    }
+  },
+  commodities: ["Apple", "Onion", "Potato", "Tomato", "Arhar (Tur/Red Gram)(Whole)", "Garlic", "Ginger", "Green Chilli"]
+};
+
 export default function Home() {
   const [commodities, setCommodities] = useState<{ id: number; name: string; slug: string }[]>([]);
   const [mandis, setMandis] = useState<{ id: number; name: string; state: string; district: string }[]>([]);
@@ -252,10 +280,37 @@ export default function Home() {
   
   // Custom Query Fields (for all states, districts, and any custom commodities/mandis)
   const [useCustom, setUseCustom] = useState<boolean>(false);
-  const [customCommodity, setCustomCommodity] = useState<string>("");
-  const [customMandi, setCustomMandi] = useState<string>("");
+  const [metadata, setMetadata] = useState<AgmarknetMetadata>(DEFAULT_METADATA);
+  const [customCommodity, setCustomCommodity] = useState<string>("Apple");
   const [stateName, setStateName] = useState<string>("Tamil Nadu");
   const [districtName, setDistrictName] = useState<string>("Salem");
+  const [customMandi, setCustomMandi] = useState<string>("Sooramangalam");
+
+  const handleStateChange = (state: string) => {
+    setStateName(state);
+    const districts = Object.keys(metadata.states[state] || {});
+    if (districts.length > 0) {
+      const firstDistrict = districts[0];
+      setDistrictName(firstDistrict);
+      const markets = metadata.states[state][firstDistrict] || [];
+      if (markets.length > 0) {
+        setCustomMandi(markets[0]);
+      }
+    } else {
+      setDistrictName("");
+      setCustomMandi("");
+    }
+  };
+
+  const handleDistrictChange = (district: string) => {
+    setDistrictName(district);
+    const markets = metadata.states[stateName]?.[district] || [];
+    if (markets.length > 0) {
+      setCustomMandi(markets[0]);
+    } else {
+      setCustomMandi("");
+    }
+  };
   
   // Date selection states
   const [startDate, setStartDate] = useState<string>(
@@ -493,9 +548,10 @@ export default function Home() {
   useEffect(() => {
     async function init() {
       try {
-        const [cRes, mRes] = await Promise.all([
+        const [cRes, mRes, metaRes] = await Promise.all([
           fetch(`${API_BASE_URL}/commodities`),
           fetch(`${API_BASE_URL}/mandis`),
+          fetch(`${API_BASE_URL}/metadata/agmarknet`),
         ]);
         if (!cRes.ok || !mRes.ok) throw new Error("Failed to load metadata");
         const cData = await cRes.json();
@@ -504,6 +560,11 @@ export default function Home() {
         setMandis(mData);
         if (cData.length > 0) setSelectedCommodity(cData[0].slug);
         if (mData.length > 0) setSelectedMandi(mData[0].name);
+
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
+          setMetadata(metaData);
+        }
       } catch (err) {
         console.error(err);
         setError("Unable to connect to backend server. Make sure FastAPI is running on port 8000.");
@@ -814,46 +875,54 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-end">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Commodity</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Beans, Apple, Onion"
+                <select
                   value={customCommodity}
                   onChange={(e) => setCustomCommodity(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
-                />
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {metadata.commodities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">State</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Tamil Nadu"
+                <select
                   value={stateName}
-                  onChange={(e) => setStateName(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
-                />
+                  onChange={(e) => handleStateChange(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {Object.keys(metadata.states).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">District</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Salem"
+                <select
                   value={districtName}
-                  onChange={(e) => setDistrictName(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
-                />
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {Object.keys(metadata.states[stateName] || {}).map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Mandi / Market</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sooramangalam"
+                <select
                   value={customMandi}
                   onChange={(e) => setCustomMandi(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
-                />
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                >
+                  {(metadata.states[stateName]?.[districtName] || []).map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
