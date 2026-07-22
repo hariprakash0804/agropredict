@@ -79,7 +79,8 @@ def send_slack_notification(title: str, message: str, details: Optional[dict] = 
 def _send_email_via_resend(api_key: str, from_email: str, recipients: List[str], subject: str, body_html: str) -> Dict[str, Any]:
     """Sends email via Resend HTTP API (Port 443 - works on Render without port blocking)."""
     try:
-        sender = f"AgroPredict <{from_email}>" if "@" in from_email else "AgroPredict <onboarding@resend.dev>"
+        # Use onboarding@resend.dev for Resend free tier compatibility
+        sender = "AgroPredict <onboarding@resend.dev>"
         headers = {
             "Authorization": f"Bearer {api_key.strip()}",
             "Content-Type": "application/json"
@@ -90,6 +91,9 @@ def _send_email_via_resend(api_key: str, from_email: str, recipients: List[str],
             "subject": f"🌾 AgroPredict: {subject}",
             "html": body_html
         }
+        if from_email and "@" in from_email and "resend.dev" not in from_email:
+            payload["reply_to"] = from_email
+
         with httpx.Client(timeout=10.0) as client:
             res = client.post("https://api.resend.com/emails", headers=headers, json=payload)
             if res.status_code in [200, 201]:
