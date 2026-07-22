@@ -980,13 +980,18 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 class RegisterRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 
 class LoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
+
+
+class TestNotificationRequest(BaseModel):
+    email: Optional[str] = None
+    message: Optional[str] = None
 
 
 class SavedQueryOut(BaseModel):
@@ -1014,28 +1019,76 @@ class LogQueryRequest(BaseModel):
 
 @router.post("/auth/register", tags=["Auth"])
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Check if username exists
-    res = await db.execute(select(User).where(User.username == req.username))
+    email_clean = req.email.strip().lower()
+    if "@" not in email_clean or "." not in email_clean:
+        raise HTTPException(status_code=400, detail="Invalid email address format")
+
+    # Check if email exists
+    res = await db.execute(select(User).where(User.email == email_clean))
     existing = res.scalar_one_or_none()
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Email already registered")
         
     pw_hash = hash_password(req.password)
-    user = User(username=req.username, password_hash=pw_hash)
+    user = User(email=email_clean, username=email_clean.split("@")[0], password_hash=pw_hash)
     db.add(user)
     await db.commit()
-    return {"status": "success", "message": "User registered successfully"}
+    return {"status": "success", "message": "User registered successfully", "email": email_clean}
 
 
 @router.post("/auth/login", tags=["Auth"])
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(User).where(User.username == req.username))
+    email_clean = req.email.strip().lower()
+    res = await db.execute(select(User).where(User.email == email_clean))
     user = res.scalar_one_or_none()
+
+    # Fallback check for username if email not found
+    if not user:
+        res = await db.execute(select(User).where(User.username == email_clean))
+        user = res.scalar_one_or_none()
+
     if not user or not verify_password(req.password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Invalid username or password")
+        raise HTTPException(status_code=400, detail="Invalid email or password")
         
-    # Return simple session info (user_id and username)
-    return {"status": "success", "user_id": user.id, "username": user.username}
+    # Return simple session info (user_id and email)
+    return {"status": "success", "user_id": user.id, "email": user.email or user.username}
+
+
+@router.post("/notifications/test-slack", tags=["Notifications"])
+async def test_slack_notification(req: TestNotificationRequest):
+    from app.services.notification import send_slack_notification
+    msg = req.message or "This is a test notification from AgroPredict!"
+    success = send_slack_notification("Test Alert", msg)
+    if not success:
+        raise HTTPException(status_code=400, detail="Slack Webhook URL not configured or failed to send.")
+    return {"status": "success", "message": "Slack notification dispatched successfully."}
+
+
+@router.post("/notifications/test-email", tags=["Notifications"])
+async def test_email_notification(req: TestNotificationRequest, db: AsyncSession = Depends(get_db)):
+    from app.services.notification import send_email_notification, get_all_registered_user_emails
+    recipients = [req.email] if req.email else await db.run_sync(get_all_registered_user_emails)
+    if not recipients:
+        raise HTTPException(status_code=400, detail="No valid target email addresses found.")
+    
+    html = f"""
+    <div style="font-family: Arial; background: #18181b; color: #fff; padding: 20px; border-radius: 8px;">
+        <h2 style="color: #22c55e;">🌾 AgroPredict Email Notification Test</h2>
+        <p>{req.message or 'SMTP Email Notification System is working properly!'}</p>
+    </div>
+    """
+    success = send_email_notification(recipients, "Test Alert", html)
+    if not success:
+        raise HTTPException(status_code=400, detail="SMTP server settings not configured or failed to send email.")
+    return {"status": "success", "recipients": recipients}
+
+
+@router.post("/notifications/broadcast", tags=["Notifications"])
+async def broadcast_notifications(db: AsyncSession = Depends(get_db)):
+    from app.services.notification import broadcast_daily_update
+    result = await db.run_sync(broadcast_daily_update)
+    return {"status": "success", "details": result}
+
 
 
 @router.post("/users/{user_id}/logs", tags=["Auth"])

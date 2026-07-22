@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         
-        # Lightweight migrations to add variety/grade columns to price_observations
+        # Lightweight migrations
         from sqlalchemy import text
         for col in ["variety", "grade"]:
             try:
@@ -36,6 +36,13 @@ async def lifespan(app: FastAPI):
             except Exception:
                 # Column already exists, ignore
                 pass
+
+        try:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100) UNIQUE"))
+            print("[AgroPredict] Migration: Added column 'email' to users table.")
+        except Exception:
+            # Column already exists, ignore
+            pass
     print("[AgroPredict] Database tables verified.")
 
     print("[AgroPredict] Starting background scheduler...")

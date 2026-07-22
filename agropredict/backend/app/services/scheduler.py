@@ -52,7 +52,14 @@ def daily_data_ingestion_job():
             
         logger.info("Scheduled daily data ingestion job completed successfully.")
         
-    except Exception as e:
+        # Trigger Slack and Email notification dispatch to registered user emails
+        try:
+            from app.services.notification import broadcast_daily_update
+            noti_res = broadcast_daily_update(db)
+            logger.info(f"Broadcast notification result: {noti_res}")
+        except Exception as noti_err:
+            logger.error(f"Failed to dispatch daily notifications: {noti_err}")
+
         logger.error(f"Error in scheduled daily ingestion job: {e}", exc_info=True)
     finally:
         db.close()

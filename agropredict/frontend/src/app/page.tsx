@@ -450,7 +450,7 @@ export default function Home() {
   // User Auth & History States
   interface UserSession {
     id: number;
-    username: string;
+    email: string;
   }
   interface SavedQuery {
     id: number;
@@ -466,10 +466,11 @@ export default function Home() {
   const [user, setUser] = useState<UserSession | null>(null);
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [authUsername, setAuthUsername] = useState<string>("");
+  const [authEmail, setAuthEmail] = useState<string>("");
   const [authPassword, setAuthPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [notiStatus, setNotiStatus] = useState<string | null>(null);
 
   // Check localstorage on load
   useEffect(() => {
@@ -505,7 +506,7 @@ export default function Home() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authUsername.trim() || !authPassword.trim()) {
+    if (!authEmail.trim() || !authPassword.trim()) {
       setAuthError("All fields are required.");
       return;
     }
@@ -517,7 +518,7 @@ export default function Home() {
       const res = await fetch(`${API_BASE_URL}/auth/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: authUsername, password: authPassword })
+        body: JSON.stringify({ email: authEmail, password: authPassword })
       });
 
       if (!res.ok) {
@@ -527,7 +528,7 @@ export default function Home() {
 
       const data = await res.json();
       if (authMode === "login") {
-        const session = { id: data.user_id, username: data.username };
+        const session = { id: data.user_id, email: data.email };
         setUser(session);
         localStorage.setItem("agropredict_user", JSON.stringify(session));
       } else {
@@ -537,22 +538,43 @@ export default function Home() {
         const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: authUsername, password: authPassword })
+          body: JSON.stringify({ email: authEmail, password: authPassword })
         });
         if (loginRes.ok) {
           const loginData = await loginRes.json();
-          const session = { id: loginData.user_id, username: loginData.username };
+          const session = { id: loginData.user_id, email: loginData.email };
           setUser(session);
           localStorage.setItem("agropredict_user", JSON.stringify(session));
         }
       }
-      setAuthUsername("");
+      setAuthEmail("");
       setAuthPassword("");
     } catch (err: any) {
       setAuthError(err.message || "An authentication error occurred.");
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  const handleTestNotifications = async () => {
+    if (!user?.email) return;
+    setNotiStatus("Dispatching test notification...");
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications/test-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, message: `Hello ${user.email}, this is a test notification from AgroPredict!` })
+      });
+      if (res.ok) {
+        setNotiStatus("Email alert sent successfully!");
+      } else {
+        const err = await res.json();
+        setNotiStatus(`Notification: ${err.detail || 'SMTP not configured'}`);
+      }
+    } catch (e) {
+      setNotiStatus("Error triggering notification");
+    }
+    setTimeout(() => setNotiStatus(null), 5000);
   };
 
   const handleSignOut = () => {
@@ -1133,13 +1155,13 @@ export default function Home() {
             )}
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Username</label>
+              <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Email Address</label>
               <input
-                type="text"
-                placeholder="Enter username"
-                value={authUsername}
-                onChange={(e) => setAuthUsername(e.target.value)}
-                className="bg-zinc-805 border border-zinc-705 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                type="email"
+                placeholder="Enter email address (e.g. user@example.com)"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -1150,7 +1172,7 @@ export default function Home() {
                 placeholder="Enter password"
                 value={authPassword}
                 onChange={(e) => setAuthPassword(e.target.value)}
-                className="bg-zinc-805 border border-zinc-705 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -1198,9 +1220,22 @@ export default function Home() {
               <span>Enter Custom Parameters</span>
             </label>
 
+            {/* Test Notification Trigger */}
+            <button
+              onClick={handleTestNotifications}
+              title="Send a test notification to your registered email"
+              className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-all font-medium cursor-pointer"
+            >
+              🔔 Test Email Alert
+            </button>
+
+            {notiStatus && (
+              <span className="text-xs text-amber-400 font-medium animate-pulse">{notiStatus}</span>
+            )}
+
             {/* User Session and Sign Out */}
             <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-800/40 px-3 py-1.5 rounded-lg border border-zinc-700/50">
-              <span className="font-semibold text-zinc-300">👋 {user.username}</span>
+              <span className="font-semibold text-zinc-300">👋 {user.email}</span>
               <button
                 onClick={handleSignOut}
                 className="text-red-400 hover:text-red-350 ml-2 font-bold cursor-pointer"
