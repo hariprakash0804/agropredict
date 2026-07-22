@@ -981,8 +981,9 @@ export default function Home() {
       const histData = await histRes.json();
 
       // Fetch forecast and accuracy in parallel (since commodity and mandi are now guaranteed to exist in DB)
+      const userParam = user?.email ? `&user_email=${encodeURIComponent(user.email)}` : "";
       const [foreRes, accRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}&variety=${useCustom ? selectedVariety : "All"}&grade=${useCustom ? selectedGrade : "All"}`),
+        fetch(`${API_BASE_URL}/forecast/${commSlug}/${mandiVal}?state=${stateName}&district=${districtName}&horizon=${horizon}&variety=${useCustom ? selectedVariety : "All"}&grade=${useCustom ? selectedGrade : "All"}&notify=true${userParam}`),
         fetch(`${API_BASE_URL}/accuracy/${commSlug}?horizon=${horizon}`),
       ]);
 

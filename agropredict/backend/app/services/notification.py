@@ -335,23 +335,70 @@ def broadcast_daily_update(db: Session, update_summary: Optional[dict] = None) -
     }
 
 
-def notify_ingestion_event(commodity_name: str, mandi_name: str, state: str, record_count: int, db: Session, user_email: Optional[str] = None) -> dict:
+def notify_ingestion_event(
+    commodity_name: str, 
+    mandi_name: str, 
+    state: str, 
+    record_count: int, 
+    db: Session, 
+    user_email: Optional[str] = None,
+    prediction_summary: Optional[dict] = None
+) -> dict:
     """
-    Sends Slack and Email notifications whenever data ingestion is executed (dynamically or manually).
+    Sends Slack and Email notifications whenever data ingestion/prediction is executed,
+    including the overall AI price forecast and advisories in the message payload.
     """
     settings = get_settings()
-    title = f"Data Ingestion Triggered: {commodity_name} at {mandi_name}"
+    title = f"Market Ingestion & Forecast: {commodity_name} ({mandi_name})"
     summary_text = (
         f"Fresh market data ingestion executed for {commodity_name} in {mandi_name}, {state}. "
-        f"Successfully processed {record_count} price observations and updated AI models."
+        f"Processed {record_count} price observations and updated AI models."
     )
+    
     details = {
         "Commodity": commodity_name,
         "Mandi": mandi_name,
         "State": state,
         "Records Processed": str(record_count),
-        "Frontend": settings.FRONTEND_URL
     }
+
+    prediction_html = ""
+    if prediction_summary:
+        details["Current Price"] = prediction_summary.get("current_price", "N/A")
+        details["30d Target Rate"] = prediction_summary.get("forecast_30d_target", "N/A")
+        details["Confidence Range"] = prediction_summary.get("confidence_bounds", "N/A")
+        details["Farmer Strategy"] = prediction_summary.get("farmer_strategy", "N/A")
+        details["Trader Strategy"] = prediction_summary.get("trader_strategy", "N/A")
+
+        prediction_html = f"""
+        <div style="background-color: #18181b; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #22c55e;">
+            <h3 style="margin: 0 0 12px 0; color: #22c55e; font-size: 16px;">📈 Overall AI Price Prediction Summary</h3>
+            <table style="width: 100%; color: #f4f4f5; font-size: 14px; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #27272a;">
+                    <td style="padding: 6px 0; color: #a1a1aa;">Current Modal Rate:</td>
+                    <td style="padding: 6px 0; font-weight: bold; text-align: right;">{prediction_summary.get("current_price", "N/A")}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #27272a;">
+                    <td style="padding: 6px 0; color: #a1a1aa;">30-Day Target (p50):</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #34d399; text-align: right;">{prediction_summary.get("forecast_30d_target", "N/A")}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #27272a;">
+                    <td style="padding: 6px 0; color: #a1a1aa;">Confidence Range (p10-p90):</td>
+                    <td style="padding: 6px 0; text-align: right;">{prediction_summary.get("confidence_bounds", "N/A")}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #27272a;">
+                    <td style="padding: 6px 0; color: #a1a1aa;">Farmer Strategy:</td>
+                    <td style="padding: 6px 0; color: #facc15; font-weight: bold; text-align: right;">{prediction_summary.get("farmer_strategy", "N/A")}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #a1a1aa;">Trader Strategy:</td>
+                    <td style="padding: 6px 0; color: #60a5fa; font-weight: bold; text-align: right;">{prediction_summary.get("trader_strategy", "N/A")}</td>
+                </tr>
+            </table>
+        </div>
+        """
+
+    details["Dashboard"] = settings.FRONTEND_URL
 
     # 1. Slack notification
     slack_res = send_slack_notification(title, summary_text, details)
@@ -366,16 +413,17 @@ def notify_ingestion_event(commodity_name: str, mandi_name: str, state: str, rec
     <html>
     <body style="font-family: Arial, sans-serif; background-color: #18181b; color: #f4f4f5; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #27272a; border-radius: 8px; padding: 24px; border: 1px solid #3f3f46;">
-            <h2 style="color: #22c55e; margin-top: 0;">🌾 AgroPredict Ingestion Alert</h2>
+            <h2 style="color: #22c55e; margin-top: 0;">🌾 AgroPredict Market & Forecast Alert</h2>
             <p style="color: #e4e4e7; font-size: 16px; line-height: 1.5;">
-                Data ingestion was executed for <strong>{commodity_name}</strong> at <strong>{mandi_name}, {state}</strong>.
+                Data ingestion and forecast execution completed for <strong>{commodity_name}</strong> at <strong>{mandi_name}, {state}</strong>.
             </p>
+            {prediction_html}
             <div style="background-color: #18181b; padding: 16px; border-radius: 6px; margin: 16px 0;">
                 <p style="margin: 0; color: #f4f4f5;"><strong>Records Processed:</strong> {record_count}</p>
                 <p style="margin: 4px 0 0 0; color: #a1a1aa;">{summary_text}</p>
             </div>
             <a href="{settings.FRONTEND_URL}" style="display: inline-block; background-color: #22c55e; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 12px;">
-                View Live Forecast & Analytics
+                View Live Dashboard & Charts
             </a>
         </div>
     </body>
@@ -384,9 +432,9 @@ def notify_ingestion_event(commodity_name: str, mandi_name: str, state: str, rec
 
     email_res = send_email_notification(
         to_emails=recipients,
-        subject=f"Market Ingestion: {commodity_name} ({mandi_name})",
+        subject=f"Market & Forecast Alert: {commodity_name} ({mandi_name})",
         body_html=html_content,
-        body_text=summary_text
+        body_text=f"{summary_text}\n\nVisit: {settings.FRONTEND_URL}"
     )
 
     return {
@@ -394,4 +442,5 @@ def notify_ingestion_event(commodity_name: str, mandi_name: str, state: str, rec
         "email": email_res,
         "recipients": recipients
     }
+
 

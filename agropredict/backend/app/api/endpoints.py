@@ -596,6 +596,8 @@ async def get_forecast(
     horizon: int = 30,
     variety: Optional[str] = None,
     grade: Optional[str] = None,
+    user_email: Optional[str] = None,
+    notify: bool = False,
     db: AsyncSession = Depends(get_db),
     redis = Depends(get_redis)
 ):
@@ -606,16 +608,18 @@ async def get_forecast(
     if horizon not in [7, 30]:
         raise HTTPException(status_code=400, detail="Horizon must be either 7 or 30 days")
 
-    print(f"[DEBUG] get_forecast called with commodity_slug={commodity_slug}, mandi_name={mandi_name}, variety={variety}, grade={grade}")
+    print(f"[DEBUG] get_forecast called with commodity_slug={commodity_slug}, mandi_name={mandi_name}, variety={variety}, grade={grade}, notify={notify}, user_email={user_email}")
+    dynamic_ingest_ran = False
         
     # 1. Check Redis Cache
     cache_key = f"forecast:{commodity_slug}:{mandi_name}:{horizon}:{variety}:{grade}"
-    try:
-        cached_data = await redis.get(cache_key)
-        if cached_data:
-            return ForecastResponse(**json.loads(cached_data))
-    except Exception as e:
-        print(f"Redis cache read error: {e}")
+    if not notify:
+        try:
+            cached_data = await redis.get(cache_key)
+            if cached_data:
+                return ForecastResponse(**json.loads(cached_data))
+        except Exception as e:
+            print(f"Redis cache read error: {e}")
         
     # 2. Get or create Commodity
     comm_res = await db.execute(select(Commodity).where(Commodity.slug == commodity_slug))
@@ -882,6 +886,24 @@ async def get_forecast(
         p90=p90,
         model_name=model_winner
     )
+
+    # Dispatch Slack & Email notification containing overall prediction summary
+    if notify or dynamic_ingest_ran:
+        try:
+            from app.services.notification import notify_ingestion_event
+            pred_summary = {
+                "current_price": f"₹{last_p:.2f} / Qtl",
+                "forecast_30d_target": f"₹{p50[-1]:.2f} / Qtl ({price_change_pct:+.1f}%)",
+                "confidence_bounds": f"p10: ₹{p10[-1]:.2f} - p90: ₹{p90[-1]:.2f}",
+                "farmer_strategy": farmer_strategy,
+                "trader_strategy": trader_strategy
+            }
+            c_name, m_name = commodity.name, mandi.name
+            rec_count = len(prices)
+            u_email = user_email
+            await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db, u_email, pred_summary))
+        except Exception as noti_err:
+            print(f"[AgroPredict] Forecast notification note: {noti_err}")
         
     return forecast_response
 
