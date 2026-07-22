@@ -895,8 +895,8 @@ async def get_forecast(
                 "current_price": f"₹{last_p:.2f} / Qtl",
                 "forecast_30d_target": f"₹{p50[-1]:.2f} / Qtl ({price_change_pct:+.1f}%)",
                 "confidence_bounds": f"p10: ₹{p10[-1]:.2f} - p90: ₹{p90[-1]:.2f}",
-                "farmer_strategy": farmer_strategy,
-                "trader_strategy": trader_strategy
+                "farmer_strategy": forecast_response.farmer_strategy,
+                "trader_strategy": forecast_response.trader_strategy
             }
             c_name, m_name = commodity.name, mandi.name
             rec_count = len(prices)
