@@ -1087,10 +1087,10 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def test_slack_notification(req: TestNotificationRequest):
     from app.services.notification import send_slack_notification
     msg = req.message or "This is a test notification from AgroPredict!"
-    success = send_slack_notification("Test Alert", msg)
-    if not success:
-        raise HTTPException(status_code=400, detail="Slack Webhook URL not configured or failed to send.")
-    return {"status": "success", "message": "Slack notification dispatched successfully."}
+    res = send_slack_notification("Test Alert", msg)
+    if not res["success"]:
+        raise HTTPException(status_code=400, detail=res["message"])
+    return {"status": "success", "message": res["message"]}
 
 
 @router.post("/notifications/test-email", tags=["Notifications"])
@@ -1098,18 +1098,18 @@ async def test_email_notification(req: TestNotificationRequest, db: AsyncSession
     from app.services.notification import send_email_notification, get_all_registered_user_emails
     recipients = [req.email] if req.email else await db.run_sync(get_all_registered_user_emails)
     if not recipients:
-        raise HTTPException(status_code=400, detail="No valid target email addresses found.")
+        raise HTTPException(status_code=400, detail="No valid target recipient email addresses found.")
     
     html = f"""
     <div style="font-family: Arial; background: #18181b; color: #fff; padding: 20px; border-radius: 8px;">
         <h2 style="color: #22c55e;">🌾 AgroPredict Email Notification Test</h2>
-        <p>{req.message or 'SMTP Email Notification System is working properly!'}</p>
+        <p>{req.message or 'Gmail / SMTP Email Notification System is working properly!'}</p>
     </div>
     """
-    success = send_email_notification(recipients, "Test Alert", html)
-    if not success:
-        raise HTTPException(status_code=400, detail="SMTP server settings not configured or failed to send email.")
-    return {"status": "success", "recipients": recipients}
+    res = send_email_notification(recipients, "Test Alert", html)
+    if not res["success"]:
+        raise HTTPException(status_code=400, detail=res["message"])
+    return {"status": "success", "message": res["message"], "recipients": res["recipients"]}
 
 
 @router.post("/notifications/broadcast", tags=["Notifications"])
