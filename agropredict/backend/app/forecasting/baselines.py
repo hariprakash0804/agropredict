@@ -71,13 +71,13 @@ class LightGBMForecaster:
         df['month'] = df['date'].dt.month
         
         # Target lags
-        for lag in [1, 7, 14, 30]:
-            df[f'price_lag_{lag}'] = df['modal_price'].shift(lag)
+        for lag in [1, 2, 3, 7]:
+            df[f'price_lag_{lag}'] = df['modal_price'].shift(lag).bfill().ffill()
             
         # Target rolling statistics
-        for window in [7, 14, 30]:
-            df[f'price_roll_mean_{window}'] = df['modal_price'].shift(1).rolling(window).mean()
-            df[f'price_roll_std_{window}'] = df['modal_price'].shift(1).rolling(window).std()
+        for window in [3, 7]:
+            df[f'price_roll_mean_{window}'] = df['modal_price'].shift(1).rolling(window, min_periods=1).mean().bfill().ffill()
+            df[f'price_roll_std_{window}'] = df['modal_price'].shift(1).rolling(window, min_periods=1).std().fillna(0.0)
 
         # Weather features
         df['temp_range'] = df['temp_max'] - df['temp_min']
@@ -97,9 +97,9 @@ class LightGBMForecaster:
         feature_cols = [
             'day_of_week', 'month', 'temp_max', 'temp_min', 'precipitation_mm',
             'temp_range', 'precip_roll_sum_7', 'precip_roll_sum_30',
-            'price_lag_1', 'price_lag_7', 'price_lag_14', 'price_lag_30',
-            'price_roll_mean_7', 'price_roll_mean_14', 'price_roll_mean_30',
-            'price_roll_std_7', 'price_roll_std_14', 'price_roll_std_30'
+            'price_lag_1', 'price_lag_2', 'price_lag_3', 'price_lag_7',
+            'price_roll_mean_3', 'price_roll_mean_7',
+            'price_roll_std_3', 'price_roll_std_7'
         ]
         
         # Train a separate model for each step ahead (direct multi-step)
@@ -113,15 +113,15 @@ class LightGBMForecaster:
             X_clean = X[valid_idx]
             y_clean = y[valid_idx]
             
-            if len(X_clean) < 10:
-                # Too little data, skip fitting this step (will fallback to step-1 or last value)
+            if len(X_clean) < 3:
+                # Too little data, skip fitting this step (will fallback to linear momentum projection)
                 continue
                 
             model = LGBMRegressor(
-                n_estimators=100,
+                n_estimators=50,
                 learning_rate=0.05,
-                max_depth=5,
-                num_leaves=31,
+                max_depth=4,
+                num_leaves=15,
                 random_state=42,
                 verbosity=-1
             )
