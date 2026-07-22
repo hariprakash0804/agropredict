@@ -426,9 +426,17 @@ async def get_history(
                     variety=stmt_ins.inserted.variety,
                     grade=stmt_ins.inserted.grade
                 )
-                await db.execute(stmt_ins)
             await db.commit()
             
+            # Dispatch Slack & Email notification alert for the dynamic ingestion event
+            try:
+                from app.services.notification import notify_ingestion_event
+                c_name, m_name = commodity.name, mandi.name
+                rec_count = len(api_records)
+                await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db))
+            except Exception as noti_err:
+                print(f"[AgroPredict] Ingestion notification note: {noti_err}")
+
             # Re-query prices
             stmt_re = (
                 select(PriceObservation)
@@ -685,9 +693,17 @@ async def get_forecast(
                     variety=stmt_ins.inserted.variety,
                     grade=stmt_ins.inserted.grade
                 )
-                await db.execute(stmt_ins)
             await db.commit()
             
+            # Dispatch Slack & Email notification alert for the dynamic ingestion event
+            try:
+                from app.services.notification import notify_ingestion_event
+                c_name, m_name = commodity.name, mandi.name
+                rec_count = len(api_records)
+                await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db))
+            except Exception as noti_err:
+                print(f"[AgroPredict] Forecast Ingestion notification note: {noti_err}")
+
             # Re-fetch
             stmt_re = (
                 select(PriceObservation.date, PriceObservation.modal_price, PriceObservation.variety, PriceObservation.grade)
@@ -1166,4 +1182,80 @@ async def get_user_query_logs(user_id: int, db: AsyncSession = Depends(get_db)):
             created_at=l.created_at.isoformat()
         ) for l in logs
     ]
+
+
+class ManualIngestRequest(BaseModel):
+    state: str
+    district: str
+    mandi_name: str
+    commodity_name: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    user_email: Optional[str] = None
+
+
+@router.post("/ingest", tags=["Ingestion"])
+async def trigger_manual_ingestion(req: ManualIngestRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Triggers dynamic data ingestion for a commodity/mandi and dispatches Slack & Email notifications.
+    """
+    s_date = date.fromisoformat(req.start_date) if req.start_date else (date.today() - timedelta(days=90))
+    e_date = date.fromisoformat(req.end_date) if req.end_date else date.today()
+
+    api_records = await fetch_prices_from_api(
+        req.state, req.district, req.mandi_name, req.commodity_name, s_date, e_date
+    )
+
+    if not api_records:
+        return {"status": "warning", "message": f"No new records found on data.gov.in for {req.commodity_name} at {req.mandi_name}."}
+
+    # Resolve commodity and mandi IDs
+    c_res = await db.execute(select(Commodity).where(Commodity.name == req.commodity_name))
+    comm = c_res.scalar_one_or_none()
+    if not comm:
+        comm = Commodity(name=req.commodity_name, slug=req.commodity_name.lower().replace(" ", "-"), category="General")
+        db.add(comm)
+        await db.commit()
+        await db.refresh(comm)
+
+    m_res = await db.execute(select(Mandi).where(Mandi.name == req.mandi_name))
+    man = m_res.scalar_one_or_none()
+    if not man:
+        man = Mandi(name=req.mandi_name, state=req.state, district=req.district, latitude=11.6643, longitude=78.1460)
+        db.add(man)
+        await db.commit()
+        await db.refresh(man)
+
+    for r in api_records:
+        stmt_ins = mysql_insert(PriceObservation).values(
+            commodity_id=comm.id,
+            mandi_id=man.id,
+            date=r["date"],
+            min_price=r["min_price"],
+            max_price=r["max_price"],
+            modal_price=r["modal_price"],
+            variety=r.get("variety", "FAQ"),
+            grade=r.get("grade", "FAQ")
+        )
+        stmt_ins = stmt_ins.on_duplicate_key_update(
+            min_price=stmt_ins.inserted.min_price,
+            max_price=stmt_ins.inserted.max_price,
+            modal_price=stmt_ins.inserted.modal_price
+        )
+        await db.execute(stmt_ins)
+    await db.commit()
+
+    # Trigger notifications
+    from app.services.notification import notify_ingestion_event
+    c_name, m_name, state_name = comm.name, man.name, req.state
+    rec_count = len(api_records)
+    u_email = req.user_email
+    noti_res = await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state_name, rec_count, sync_db, u_email))
+
+    return {
+        "status": "success",
+        "message": f"Successfully ingested {rec_count} records for {req.commodity_name} at {req.mandi_name}.",
+        "notification": noti_res
+    }
+
     

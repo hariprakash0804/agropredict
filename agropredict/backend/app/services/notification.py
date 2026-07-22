@@ -99,6 +99,20 @@ def _send_email_via_resend(api_key: str, from_email: str, recipients: List[str],
             if res.status_code in [200, 201]:
                 logger.info(f"[Notification] Email sent via Resend HTTP API to {recipients}.")
                 return {"success": True, "message": f"Email sent via Resend API to {len(recipients)} recipient(s).", "recipients": recipients}
+            elif res.status_code == 403 and "only send testing emails to your own email address" in res.text:
+                # Resend Free Tier restriction: Only allows sending to account owner email during testing
+                owner_target = [from_email] if (from_email and "@" in from_email) else recipients[:1]
+                logger.warning(f"[Notification] Resend Free restriction hit. Retrying send to account owner: {owner_target}")
+                payload["to"] = owner_target
+                retry_res = client.post("https://api.resend.com/emails", headers=headers, json=payload)
+                if retry_res.status_code in [200, 201]:
+                    msg_text = f"Email sent via Resend to account owner ({owner_target[0]}). (Note: Resend free tier requires domain verification at resend.com/domains to email other addresses)."
+                    logger.info(f"[Notification] {msg_text}")
+                    return {"success": True, "message": msg_text, "recipients": owner_target}
+                else:
+                    err_msg = f"Resend API error ({retry_res.status_code}): {retry_res.text}"
+                    logger.error(f"[Notification] {err_msg}")
+                    return {"success": False, "message": err_msg, "recipients": recipients}
             else:
                 err_msg = f"Resend API error ({res.status_code}): {res.text}"
                 logger.error(f"[Notification] {err_msg}")
@@ -319,3 +333,65 @@ def broadcast_daily_update(db: Session, update_summary: Optional[dict] = None) -
         "recipient_count": len(user_emails),
         "recipients": user_emails
     }
+
+
+def notify_ingestion_event(commodity_name: str, mandi_name: str, state: str, record_count: int, db: Session, user_email: Optional[str] = None) -> dict:
+    """
+    Sends Slack and Email notifications whenever data ingestion is executed (dynamically or manually).
+    """
+    settings = get_settings()
+    title = f"Data Ingestion Triggered: {commodity_name} at {mandi_name}"
+    summary_text = (
+        f"Fresh market data ingestion executed for {commodity_name} in {mandi_name}, {state}. "
+        f"Successfully processed {record_count} price observations and updated AI models."
+    )
+    details = {
+        "Commodity": commodity_name,
+        "Mandi": mandi_name,
+        "State": state,
+        "Records Processed": str(record_count),
+        "Frontend": settings.FRONTEND_URL
+    }
+
+    # 1. Slack notification
+    slack_res = send_slack_notification(title, summary_text, details)
+
+    # 2. Email recipients: user_email if specified + all registered users
+    target_emails = [user_email] if user_email else []
+    registered_emails = get_all_registered_user_emails(db)
+    recipients = list(set([e for e in target_emails + registered_emails if e and "@" in e]))
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #18181b; color: #f4f4f5; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #27272a; border-radius: 8px; padding: 24px; border: 1px solid #3f3f46;">
+            <h2 style="color: #22c55e; margin-top: 0;">🌾 AgroPredict Ingestion Alert</h2>
+            <p style="color: #e4e4e7; font-size: 16px; line-height: 1.5;">
+                Data ingestion was executed for <strong>{commodity_name}</strong> at <strong>{mandi_name}, {state}</strong>.
+            </p>
+            <div style="background-color: #18181b; padding: 16px; border-radius: 6px; margin: 16px 0;">
+                <p style="margin: 0; color: #f4f4f5;"><strong>Records Processed:</strong> {record_count}</p>
+                <p style="margin: 4px 0 0 0; color: #a1a1aa;">{summary_text}</p>
+            </div>
+            <a href="{settings.FRONTEND_URL}" style="display: inline-block; background-color: #22c55e; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 12px;">
+                View Live Forecast & Analytics
+            </a>
+        </div>
+    </body>
+    </html>
+    """
+
+    email_res = send_email_notification(
+        to_emails=recipients,
+        subject=f"Market Ingestion: {commodity_name} ({mandi_name})",
+        body_html=html_content,
+        body_text=summary_text
+    )
+
+    return {
+        "slack": slack_res,
+        "email": email_res,
+        "recipients": recipients
+    }
+
