@@ -447,18 +447,6 @@ async def get_history(
                 
             prices_res = await db.execute(stmt_re.order_by(PriceObservation.date.desc()))
             prices = prices_res.scalars().all()
-
-    # Dispatch Slack & Email notification alert if requested or dynamic ingestion ran
-    if notify or dynamic_ingest_ran:
-        try:
-            from app.services.notification import notify_ingestion_event
-            c_name, m_name = commodity.name, mandi.name
-            rec_count = api_records_count if dynamic_ingest_ran else len(prices)
-            u_email = user_email
-            await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db, u_email))
-        except Exception as noti_err:
-            print(f"[AgroPredict] Ingestion notification note: {noti_err}")
-
     # Reverse to chronological order
     prices.reverse()
     
