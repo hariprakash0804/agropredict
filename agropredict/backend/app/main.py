@@ -37,12 +37,28 @@ async def lifespan(app: FastAPI):
                 # Column already exists, ignore
                 pass
 
+        # Robust column migration for users.email
         try:
-            await conn.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100) UNIQUE"))
-            print("[AgroPredict] Migration: Added column 'email' to users table.")
-        except Exception:
-            # Column already exists, ignore
-            pass
+            res = await conn.execute(text("SHOW COLUMNS FROM users LIKE 'email'"))
+            if not res.scalar_one_or_none():
+                print("[AgroPredict] Migration: Adding 'email' column to users table...")
+                await conn.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100) NULL"))
+                try:
+                    await conn.execute(text("UPDATE users SET email = username WHERE email IS NULL AND username IS NOT NULL"))
+                    await conn.execute(text("CREATE UNIQUE INDEX ix_users_email ON users (email)"))
+                except Exception as idx_err:
+                    print(f"[AgroPredict] Index/Update note: {idx_err}")
+                print("[AgroPredict] Migration SUCCESS: 'email' column added to users table.")
+            else:
+                print("[AgroPredict] Migration: 'email' column already present in users table.")
+        except Exception as e:
+            print(f"[AgroPredict] Migration error checking users.email: {e}")
+            # Direct fallback alter attempt
+            try:
+                await conn.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100)"))
+                print("[AgroPredict] Migration Fallback: Added 'email' column.")
+            except Exception:
+                pass
     print("[AgroPredict] Database tables verified.")
 
     print("[AgroPredict] Starting background scheduler...")

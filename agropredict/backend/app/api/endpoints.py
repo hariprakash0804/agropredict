@@ -1023,9 +1023,22 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     if "@" not in email_clean or "." not in email_clean:
         raise HTTPException(status_code=400, detail="Invalid email address format")
 
-    # Check if email exists
-    res = await db.execute(select(User).where(User.email == email_clean))
-    existing = res.scalar_one_or_none()
+    try:
+        res = await db.execute(select(User).where(User.email == email_clean))
+        existing = res.scalar_one_or_none()
+    except Exception as err:
+        if "1054" in str(err) or "email" in str(err).lower():
+            from sqlalchemy import text
+            try:
+                await db.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100)"))
+                await db.commit()
+            except Exception:
+                pass
+            res = await db.execute(select(User).where(User.email == email_clean))
+            existing = res.scalar_one_or_none()
+        else:
+            raise err
+
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
         
@@ -1039,13 +1052,29 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/auth/login", tags=["Auth"])
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     email_clean = req.email.strip().lower()
-    res = await db.execute(select(User).where(User.email == email_clean))
-    user = res.scalar_one_or_none()
+    try:
+        res = await db.execute(select(User).where(User.email == email_clean))
+        user = res.scalar_one_or_none()
+    except Exception as err:
+        if "1054" in str(err) or "email" in str(err).lower():
+            from sqlalchemy import text
+            try:
+                await db.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100)"))
+                await db.commit()
+            except Exception:
+                pass
+            res = await db.execute(select(User).where(User.email == email_clean))
+            user = res.scalar_one_or_none()
+        else:
+            raise err
 
     # Fallback check for username if email not found
     if not user:
-        res = await db.execute(select(User).where(User.username == email_clean))
-        user = res.scalar_one_or_none()
+        try:
+            res = await db.execute(select(User).where(User.username == email_clean))
+            user = res.scalar_one_or_none()
+        except Exception:
+            pass
 
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Invalid email or password")
