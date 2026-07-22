@@ -19,7 +19,7 @@ from app.models.commodity import User
 logger = logging.getLogger(__name__)
 
 
-def send_slack_notification(title: str, message: str, details: Optional[dict] = None) -> Dict[str, Any]:
+def send_slack_notification(title: str, message: str, details: Optional[dict] = None, custom_blocks: Optional[list] = None) -> Dict[str, Any]:
     """
     Sends a formatted notification block to the configured Slack Webhook URL.
     Returns a dict with 'success' boolean and 'message' description.
@@ -31,32 +31,35 @@ def send_slack_notification(title: str, message: str, details: Optional[dict] = 
         logger.info(f"[Notification] {msg}")
         return {"success": False, "message": msg}
 
-    blocks = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f"🌾 {title}",
-                "emoji": True
+    if custom_blocks:
+        blocks = custom_blocks
+    else:
+        blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"🌾 {title}",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": message
+                }
             }
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": message
-            }
-        }
-    ]
+        ]
 
-    if details:
-        fields = []
-        for k, v in details.items():
-            fields.append({"type": "mrkdwn", "text": f"*{k}:*\n{v}"})
-        blocks.append({
-            "type": "section",
-            "fields": fields[:10]  # Limit Slack fields
-        })
+        if details:
+            fields = []
+            for k, v in details.items():
+                fields.append({"type": "mrkdwn", "text": f"*{k}:*\n{v}"})
+            blocks.append({
+                "type": "section",
+                "fields": fields[:10]  # Limit Slack fields
+            })
 
     payload = {"blocks": blocks}
 
@@ -355,20 +358,42 @@ def notify_ingestion_event(
         f"Processed {record_count} price observations and updated AI models."
     )
     
-    details = {
-        "Commodity": commodity_name,
-        "Mandi": mandi_name,
-        "State": state,
-        "Records Processed": str(record_count),
-    }
+    slack_blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"🌾 {title}",
+                "emoji": True
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": summary_text
+            }
+        }
+    ]
 
     prediction_html = ""
     if prediction_summary:
-        details["Current Price"] = prediction_summary.get("current_price", "N/A")
-        details["30d Target Rate"] = prediction_summary.get("forecast_30d_target", "N/A")
-        details["Confidence Range"] = prediction_summary.get("confidence_bounds", "N/A")
-        details["Farmer Strategy"] = prediction_summary.get("farmer_strategy", "N/A")
-        details["Trader Strategy"] = prediction_summary.get("trader_strategy", "N/A")
+        slack_blocks.append({"type": "divider"})
+        slack_blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    f"*📈 Overall AI Price Forecast (30 Days)*\n"
+                    f"• *Current Rate:* `{prediction_summary.get('current_price', 'N/A')}`\n"
+                    f"• *30-Day Target (p50):* `{prediction_summary.get('forecast_30d_target', 'N/A')}`\n"
+                    f"• *Confidence Bounds (p10-p90):* `{prediction_summary.get('confidence_bounds', 'N/A')}`\n\n"
+                    f"🌾 *Farmer Strategy:* *{prediction_summary.get('farmer_strategy', 'N/A')}*\n"
+                    f"💼 *Trader Strategy:* *{prediction_summary.get('trader_strategy', 'N/A')}*"
+                )
+            }
+        })
+        slack_blocks.append({"type": "divider"})
 
         prediction_html = f"""
         <div style="background-color: #18181b; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #22c55e;">
@@ -398,10 +423,33 @@ def notify_ingestion_event(
         </div>
         """
 
-    details["Dashboard"] = settings.FRONTEND_URL
+    slack_blocks.append({
+        "type": "section",
+        "fields": [
+            {"type": "mrkdwn", "text": f"*Commodity:*\n{commodity_name}"},
+            {"type": "mrkdwn", "text": f"*Mandi:*\n{mandi_name}"},
+            {"type": "mrkdwn", "text": f"*State:*\n{state}"},
+            {"type": "mrkdwn", "text": f"*Records Processed:*\n{record_count}"},
+        ]
+    })
+    slack_blocks.append({
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "📊 View Live Dashboard",
+                    "emoji": True
+                },
+                "url": settings.FRONTEND_URL,
+                "style": "primary"
+            }
+        ]
+    })
 
-    # 1. Slack notification
-    slack_res = send_slack_notification(title, summary_text, details)
+    # 1. Send Slack notification using rich blocks
+    slack_res = send_slack_notification(title, summary_text, custom_blocks=slack_blocks)
 
     # 2. Email recipients: user_email if specified + all registered users
     target_emails = [user_email] if user_email else []

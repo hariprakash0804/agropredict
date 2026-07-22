@@ -966,8 +966,6 @@ export default function Home() {
         end_date: endDate,
         variety: useCustom ? selectedVariety : "All",
         grade: useCustom ? selectedGrade : "All",
-        notify: "true",
-        ...(user?.email ? { user_email: user.email } : {})
       });
 
       // Fetch history first to resolve and ingest commodity/mandi without parallel DB write conflicts
