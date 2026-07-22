@@ -332,10 +332,14 @@ async def get_history(
     end_date: Optional[str] = None,
     variety: Optional[str] = None,
     grade: Optional[str] = None,
+    user_email: Optional[str] = None,
+    notify: bool = False,
     db: AsyncSession = Depends(get_db)
 ):
     """Fetch historical price and weather observations for a commodity-mandi pair (pulling live if not cached)."""
-    print(f"[DEBUG] get_history called with commodity_slug={commodity_slug}, mandi_name={mandi_name}")
+    print(f"[DEBUG] get_history called with commodity_slug={commodity_slug}, mandi_name={mandi_name}, notify={notify}, user_email={user_email}")
+    dynamic_ingest_ran = False
+    api_records_count = 0
     # 1. Parse dates
     today = date.today()
     s_date = date.fromisoformat(start_date) if start_date else today - timedelta(days=180)
@@ -389,7 +393,6 @@ async def get_history(
     print(f"[DEBUG] get_history mandi resolved to: id={mandi.id if mandi else None}, name={mandi.name if mandi else None}")
 
     # 4. Fetch prices from DB
-    # 4. Fetch prices from DB
     stmt = (
         select(PriceObservation)
         .where(PriceObservation.commodity_id == commodity.id, PriceObservation.mandi_id == mandi.id)
@@ -408,6 +411,8 @@ async def get_history(
         print(f"Dynamically fetching prices from data.gov.in for {commodity.name} at {mandi.name}...")
         api_records = await fetch_prices_from_api(state, district, mandi_name, commodity.name, s_date, e_date, variety, grade)
         if api_records:
+            dynamic_ingest_ran = True
+            api_records_count = len(api_records)
             for r in api_records:
                 stmt_ins = mysql_insert(PriceObservation).values(
                     commodity_id=commodity.id,
@@ -426,17 +431,9 @@ async def get_history(
                     variety=stmt_ins.inserted.variety,
                     grade=stmt_ins.inserted.grade
                 )
+                await db.execute(stmt_ins)
             await db.commit()
             
-            # Dispatch Slack & Email notification alert for the dynamic ingestion event
-            try:
-                from app.services.notification import notify_ingestion_event
-                c_name, m_name = commodity.name, mandi.name
-                rec_count = len(api_records)
-                await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db))
-            except Exception as noti_err:
-                print(f"[AgroPredict] Ingestion notification note: {noti_err}")
-
             # Re-query prices
             stmt_re = (
                 select(PriceObservation)
@@ -450,6 +447,17 @@ async def get_history(
                 
             prices_res = await db.execute(stmt_re.order_by(PriceObservation.date.desc()))
             prices = prices_res.scalars().all()
+
+    # Dispatch Slack & Email notification alert if requested or dynamic ingestion ran
+    if notify or dynamic_ingest_ran:
+        try:
+            from app.services.notification import notify_ingestion_event
+            c_name, m_name = commodity.name, mandi.name
+            rec_count = api_records_count if dynamic_ingest_ran else len(prices)
+            u_email = user_email
+            await db.run_sync(lambda sync_db: notify_ingestion_event(c_name, m_name, state, rec_count, sync_db, u_email))
+        except Exception as noti_err:
+            print(f"[AgroPredict] Ingestion notification note: {noti_err}")
 
     # Reverse to chronological order
     prices.reverse()
