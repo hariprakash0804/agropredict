@@ -13,7 +13,14 @@ const getBackendUrl = () => {
   return url;
 };
 
+import path from "path";
+
 const nextConfig: NextConfig = {
+  experimental: {
+    turbopack: {
+      root: path.resolve(__dirname),
+    },
+  },
   async rewrites() {
     return [
       {
