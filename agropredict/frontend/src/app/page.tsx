@@ -26,6 +26,8 @@ import {
   Layers,
   ChevronRight,
   Search,
+  Menu,
+  X,
 } from "lucide-react";
 
 interface PriceObs {
@@ -446,6 +448,7 @@ export default function Home() {
   const [mandis, setMandis] = useState<{ id: number; name: string; state: string; district: string }[]>([]);
   const [selectedVariety, setSelectedVariety] = useState<string>("All");
   const [selectedGrade, setSelectedGrade] = useState<string>("All");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   
   // User Auth & History States
   interface UserSession {
@@ -1117,15 +1120,15 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-center items-center font-sans p-6">
-        <div className="w-full max-w-md p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md flex flex-col gap-6 shadow-xl">
-          <div className="flex flex-col items-center gap-3">
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-center items-center font-sans p-4 sm:p-6">
+        <div className="w-full max-w-md p-5 sm:p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md flex flex-col gap-6 shadow-xl">
+          <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.281m5.94 2.28l-2.28 5.941" />
               </svg>
             </div>
-            <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               AgroPredict
             </h1>
             <p className="text-xs text-zinc-400">Chronos-2 Zero-Shot Price Forecasting System</p>
@@ -1136,14 +1139,14 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => { setAuthMode("login"); setAuthError(null); }}
-                className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-all ${authMode === "login" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400"}`}
+                className={`flex-1 py-2 sm:py-1.5 rounded-md text-xs font-semibold transition-all min-h-[40px] ${authMode === "login" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400"}`}
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => { setAuthMode("register"); setAuthError(null); }}
-                className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-all ${authMode === "register" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400"}`}
+                className={`flex-1 py-2 sm:py-1.5 rounded-md text-xs font-semibold transition-all min-h-[40px] ${authMode === "register" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400"}`}
               >
                 Register
               </button>
@@ -1155,32 +1158,32 @@ export default function Home() {
               </div>
             )}
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter email address (e.g. user@example.com)"
                 value={authEmail}
                 onChange={(e) => setAuthEmail(e.target.value)}
-                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 min-h-[44px]"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Password</label>
               <input
                 type="password"
                 placeholder="Enter password"
                 value={authPassword}
                 onChange={(e) => setAuthPassword(e.target.value)}
-                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 min-h-[44px]"
               />
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-zinc-950 font-bold py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10 cursor-pointer mt-2"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-zinc-950 font-bold py-3 rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-emerald-500/10 cursor-pointer mt-2 min-h-[44px] flex items-center justify-center"
             >
               {authLoading ? "Authenticating..." : authMode === "login" ? "Sign In" : "Register & Start"}
             </button>
@@ -1193,25 +1196,26 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <header className="border-b border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.281m5.94 2.28l-2.28 5.941" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                 AgroPredict
               </h1>
-              <p className="text-[10px] text-zinc-500 font-medium">COVARIATE-INFORMED FORECASTING</p>
+              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-medium">COVARIATE-INFORMED FORECASTING</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-4">
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-4">
             {/* Custom Mode Toggle */}
-            <label className="flex items-center gap-2 cursor-pointer text-xs bg-zinc-800/60 border border-zinc-700/50 px-3 py-1.5 rounded-lg select-none">
+            <label className="flex items-center gap-2 cursor-pointer text-xs bg-zinc-800/60 border border-zinc-700/50 px-3 py-1.5 rounded-lg select-none hover:bg-zinc-800 transition-all">
               <input 
                 type="checkbox" 
                 checked={useCustom}
@@ -1236,10 +1240,10 @@ export default function Home() {
 
             {/* User Session and Sign Out */}
             <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-800/40 px-3 py-1.5 rounded-lg border border-zinc-700/50">
-              <span className="font-semibold text-zinc-300">👋 {user.email}</span>
+              <span className="font-semibold text-zinc-300 truncate max-w-[140px]">👋 {user.email}</span>
               <button
                 onClick={handleSignOut}
-                className="text-red-400 hover:text-red-350 ml-2 font-bold cursor-pointer"
+                className="text-red-400 hover:text-red-350 ml-1.5 font-bold cursor-pointer"
               >
                 Sign Out
               </button>
@@ -1250,7 +1254,60 @@ export default function Home() {
               Chronos-2 Active
             </div>
           </div>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 hover:text-white transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5 text-zinc-200" />}
+          </button>
         </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-zinc-800/80 bg-zinc-900/95 backdrop-blur-md px-4 py-4 flex flex-col gap-3.5 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/40">
+              <span className="text-xs text-zinc-300 font-medium">Custom Ingestion Mode</span>
+              <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                <input 
+                  type="checkbox" 
+                  checked={useCustom}
+                  onChange={(e) => setUseCustom(e.target.checked)}
+                  className="rounded border-zinc-700 text-emerald-500 focus:ring-emerald-500 w-4 h-4" 
+                />
+                <span className="text-xs text-emerald-400 font-semibold">{useCustom ? "Enabled" : "Disabled"}</span>
+              </label>
+            </div>
+
+            <button
+              onClick={() => { handleTestNotifications(); setMobileMenuOpen(false); }}
+              className="flex items-center justify-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2.5 rounded-xl border border-emerald-500/20 font-medium cursor-pointer min-h-[42px]"
+            >
+              🔔 Dispatch Test Email Alert
+            </button>
+
+            {notiStatus && (
+              <p className="text-xs text-amber-400 font-medium text-center animate-pulse">{notiStatus}</p>
+            )}
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/40 text-xs">
+              <span className="text-zinc-300 font-semibold truncate max-w-[200px]">👋 {user.email}</span>
+              <button
+                onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
+                className="text-red-400 font-bold hover:text-red-300 bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Chronos-2 Model Active
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Error State */}
@@ -1267,20 +1324,20 @@ export default function Home() {
       )}
 
       {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-8 flex flex-col gap-5 sm:gap-6">
         
         {/* Controls Ribbon */}
-        <section className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
+        <section className="p-4 sm:p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
           
           {useCustom ? (
             /* Custom Form for All Commodities/States/Districts/Dates */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4 items-end">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Commodity</label>
                 <select
                   value={customCommodity}
                   onChange={(e) => setCustomCommodity(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {metadata.commodities.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -1293,7 +1350,7 @@ export default function Home() {
                 <select
                   value={stateName}
                   onChange={(e) => handleStateChange(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {Object.keys(metadata.states).map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -1306,7 +1363,7 @@ export default function Home() {
                 <select
                   value={districtName}
                   onChange={(e) => handleDistrictChange(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {Object.keys(metadata.states[stateName] || {}).map((d) => (
                     <option key={d} value={d}>{d}</option>
@@ -1319,7 +1376,7 @@ export default function Home() {
                 <select
                   value={customMandi}
                   onChange={(e) => setCustomMandi(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {(metadata.states[stateName]?.[districtName] || []).map((m) => (
                     <option key={m} value={m}>{m}</option>
@@ -1332,7 +1389,7 @@ export default function Home() {
                 <select
                   value={selectedVariety}
                   onChange={(e) => setSelectedVariety(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {COMMON_VARIETIES.map((v) => (
                     <option key={v} value={v}>{v}</option>
@@ -1345,7 +1402,7 @@ export default function Home() {
                 <select
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 font-medium min-h-[42px]"
                 >
                   {COMMON_GRADES.map((g) => (
                     <option key={g} value={g}>{g}</option>
@@ -1359,7 +1416,7 @@ export default function Home() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 min-h-[42px]"
                 />
               </div>
 
@@ -1369,19 +1426,19 @@ export default function Home() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm text-zinc-200 outline-none focus:border-emerald-500 min-h-[42px]"
                 />
               </div>
             </div>
           ) : (
             /* Simple Dropdowns (Default Seeded List) */
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 items-end">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Commodity</label>
                 <select
                   value={selectedCommodity}
                   onChange={(e) => setSelectedCommodity(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-200 outline-none focus:border-emerald-500"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm font-medium text-zinc-200 outline-none focus:border-emerald-500 min-h-[42px]"
                 >
                   {commodities.map((c) => (
                     <option key={c.slug} value={c.slug}>{c.name}</option>
@@ -1394,7 +1451,7 @@ export default function Home() {
                 <select
                   value={selectedMandi}
                   onChange={(e) => setSelectedMandi(e.target.value)}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-200 outline-none focus:border-emerald-500"
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-sm font-medium text-zinc-200 outline-none focus:border-emerald-500 min-h-[42px]"
                 >
                   {mandis.map((m) => (
                     <option key={m.id} value={m.name}>{m.name}</option>
@@ -1404,12 +1461,12 @@ export default function Home() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Forecast Horizon</label>
-                <div className="flex bg-zinc-800 rounded-lg p-0.5 border border-zinc-700">
+                <div className="flex bg-zinc-800 rounded-lg p-0.5 border border-zinc-700 min-h-[42px]">
                   {[7, 30].map((h) => (
                     <button
                       key={h}
                       onClick={() => setHorizon(h)}
-                      className={`flex-1 py-1 rounded-md text-xs font-semibold transition-all ${horizon === h ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"}`}
+                      className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-all ${horizon === h ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"}`}
                     >
                       {h} Days
                     </button>
@@ -1419,13 +1476,13 @@ export default function Home() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between border-t border-zinc-850 pt-4 gap-4">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between border-t border-zinc-850 pt-4 gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
               {/* Run Query Button */}
               <button
                 onClick={handleQuery}
                 disabled={loading}
-                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-zinc-950 font-bold px-5 py-2 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10 cursor-pointer animate-fade-in"
+                className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-zinc-950 font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10 cursor-pointer min-h-[42px] w-full sm:w-auto"
               >
                 <Search className="w-4 h-4" />
                 {loading ? "Ingesting & Forecasting..." : "Run Ingestion & Predict"}
@@ -1433,25 +1490,25 @@ export default function Home() {
 
               {/* Export Buttons */}
               {history && forecast && (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={downloadExcel}
                     title="Download complete price and weather dataset as an Excel spreadsheet"
-                    className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all min-h-[40px]"
                   >
                     📥 Download Data (Excel)
                   </button>
                   <button
                     onClick={downloadChatReport}
                     title="Download summary report and AI chat log"
-                    className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all min-h-[40px]"
                   >
                     📄 Download AI Report
                   </button>
                   <button
                     onClick={() => downloadChartSVG(".price-chart-container", `agropredict_chart_${forecast.commodity.toLowerCase()}_${forecast.mandi.toLowerCase().replace(/\s+/g, '_')}.svg`)}
                     title="Export the main forecast chart as standard vector SVG"
-                    className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all min-h-[40px]"
                   >
                     📈 Export Chart (SVG)
                   </button>
@@ -1460,18 +1517,18 @@ export default function Home() {
             </div>
 
             {/* Perspective View Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-400">Advisory:</span>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-stretch sm:justify-start">
+              <span className="text-xs text-zinc-400 hidden sm:inline">Advisory:</span>
               <button
                 onClick={() => setPerspective("farmer")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${perspective === "farmer" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "border-zinc-800 text-zinc-400 hover:bg-zinc-800/40"}`}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border min-h-[40px] ${perspective === "farmer" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "border-zinc-800 text-zinc-400 hover:bg-zinc-800/40"}`}
               >
                 <User className="w-3.5 h-3.5" />
                 Farmer
               </button>
               <button
                 onClick={() => setPerspective("trader")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${perspective === "trader" ? "bg-teal-500/10 border-teal-500/30 text-teal-400" : "border-zinc-800 text-zinc-400 hover:bg-zinc-800/40"}`}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border min-h-[40px] ${perspective === "trader" ? "bg-teal-500/10 border-teal-500/30 text-teal-400" : "border-zinc-800 text-zinc-400 hover:bg-zinc-800/40"}`}
               >
                 <Building className="w-3.5 h-3.5" />
                 Trader / Procurement
@@ -1494,12 +1551,12 @@ export default function Home() {
             <div className="lg:col-span-2 flex flex-col gap-6">
               
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 
                 {/* Current Price */}
                 <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Last Observed price</p>
-                  <p className="text-2xl font-black mt-1 text-zinc-100">
+                  <p className="text-xl sm:text-2xl font-black mt-1 text-zinc-100">
                     ₹{history?.prices[history.prices.length - 1]?.modal_price || 0}
                     <span className="text-xs font-medium text-zinc-400">/Qtl</span>
                   </p>
@@ -1517,7 +1574,7 @@ export default function Home() {
                     ) : (
                       <Activity className="w-5 h-5 text-zinc-400" />
                     )}
-                    <p className={`text-2xl font-black ${insights.trend === "up" ? "text-emerald-400" : insights.trend === "down" ? "text-rose-400" : "text-zinc-200"}`}>
+                    <p className={`text-xl sm:text-2xl font-black ${insights.trend === "up" ? "text-emerald-400" : insights.trend === "down" ? "text-rose-400" : "text-zinc-200"}`}>
                       {insights.changePct > 0 ? "+" : ""}{insights.changePct.toFixed(1)}%
                     </p>
                   </div>
@@ -1527,7 +1584,7 @@ export default function Home() {
                 {/* Volatility Indicator */}
                 <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Price Volatility</p>
-                  <p className={`text-2xl font-black mt-1 ${insights.volatility === "High" ? "text-amber-400" : insights.volatility === "Moderate" ? "text-yellow-500" : "text-emerald-400"}`}>
+                  <p className={`text-xl sm:text-2xl font-black mt-1 ${insights.volatility === "High" ? "text-amber-400" : insights.volatility === "Moderate" ? "text-yellow-500" : "text-emerald-400"}`}>
                     {insights.volatility}
                   </p>
                   <span className="text-[10px] text-zinc-500">Historical deviation score</span>
@@ -1536,22 +1593,22 @@ export default function Home() {
               </div>
 
               {/* Price Forecast Area Chart */}
-              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="p-4 sm:p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-bold text-zinc-200">Price Trend & Zero-Shot Quantile Forecast</h3>
                     <p className="text-xs text-zinc-500">Dynamic history query plotted with forecast quantiles (p10, p50, p90)</p>
                   </div>
-                  <div className="flex items-center gap-3 text-[10px] font-semibold">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] font-semibold">
                     <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Actual</span>
                     <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20"></span> p10 - p90 Confidence</span>
                     <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-emerald-400 border-t border-dashed"></span> p50 Median</span>
                   </div>
                 </div>
 
-                <div className="h-[280px] w-full price-chart-container">
+                <div className="h-[220px] sm:h-[280px] w-full price-chart-container touch-scroll">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={getChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={getChartData()} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
@@ -1559,8 +1616,8 @@ export default function Home() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                      <XAxis dataKey="date" stroke="#71717a" fontSize={9} tickLine={false} />
-                      <YAxis stroke="#71717a" fontSize={9} domain={["auto", "auto"]} tickLine={false} />
+                      <XAxis dataKey="date" stroke="#71717a" fontSize={8} tickLine={false} />
+                      <YAxis stroke="#71717a" fontSize={8} domain={["auto", "auto"]} tickLine={false} width={38} />
                       <Tooltip
                         contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: "8px" }}
                         labelStyle={{ color: "#a1a1aa", fontSize: "11px", fontWeight: "bold" }}
@@ -1575,8 +1632,8 @@ export default function Home() {
               </div>
 
               {/* Weather Trend Outlook Chart */}
-              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
-                <div className="flex flex-wrap justify-between items-start gap-2">
+              <div className="p-4 sm:p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2">
                   <div>
                     <h3 className="text-sm font-bold text-zinc-200">Weather Trend Outlook</h3>
                     <p className="text-xs text-zinc-500">Historical & forecast weather parameters at mandi location</p>
@@ -1584,24 +1641,24 @@ export default function Home() {
                   <button
                     onClick={() => downloadChartSVG(".weather-chart-container", `agropredict_weather_${forecast?.commodity.toLowerCase() || "commodity"}_${forecast?.mandi.toLowerCase().replace(/\s+/g, '_') || "mandi"}.svg`)}
                     title="Export the weather outlook chart as standard vector SVG"
-                    className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all min-h-[36px] w-full sm:w-auto"
                   >
                     📈 Export Weather (SVG)
                   </button>
                 </div>
-                <div className="h-[220px] w-full weather-chart-container">
+                <div className="h-[200px] sm:h-[230px] w-full weather-chart-container touch-scroll">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={getWeatherChartData()} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <LineChart data={getWeatherChartData()} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                      <XAxis dataKey="date" stroke="#71717a" fontSize={9} tickLine={false} />
-                      <YAxis yAxisId="left" stroke="#71717a" fontSize={9} tickLine={false} label={{ value: "Temp (°C)", angle: -90, position: "insideLeft", fill: "#ef4444", style: { fontSize: "9px" } }} />
-                      <YAxis yAxisId="right" orientation="right" stroke="#71717a" fontSize={9} tickLine={false} label={{ value: "Rain (mm)", angle: 90, position: "insideRight", fill: "#3b82f6", style: { fontSize: "9px" } }} />
+                      <XAxis dataKey="date" stroke="#71717a" fontSize={8} tickLine={false} />
+                      <YAxis yAxisId="left" stroke="#71717a" fontSize={8} tickLine={false} width={34} label={{ value: "Temp (°C)", angle: -90, position: "insideLeft", fill: "#ef4444", style: { fontSize: "8px" } }} />
+                      <YAxis yAxisId="right" orientation="right" stroke="#71717a" fontSize={8} tickLine={false} width={34} label={{ value: "Rain (mm)", angle: 90, position: "insideRight", fill: "#3b82f6", style: { fontSize: "8px" } }} />
                       <Tooltip
                         contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: "8px" }}
                         labelStyle={{ color: "#a1a1aa", fontSize: "11px", fontWeight: "bold" }}
                         itemStyle={{ fontSize: "12px" }}
                       />
-                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                      <Legend wrapperStyle={{ fontSize: "9px" }} />
                       
                       {/* Temperature Lines */}
                       <Line yAxisId="left" type="monotone" dataKey="temp_max_hist" stroke="#ef4444" strokeWidth={1.5} dot={false} name="Hist Max Temp (°C)" connectNulls={true} />
@@ -1798,7 +1855,7 @@ export default function Home() {
               )}
 
               {/* AI Chat Advisor */}
-              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
+              <div className="p-4 sm:p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm flex flex-col gap-4">
                 <div className="flex items-center gap-2 pb-3 border-b border-zinc-800">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   <h3 className="text-sm font-bold text-zinc-200">AI Agricultural Co-Pilot</h3>
@@ -1824,19 +1881,19 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       placeholder="Ask the advisor..."
                       value={chatQuery}
                       onChange={(e) => setChatQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && submitChat()}
-                      className="flex-1 bg-zinc-805 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-emerald-500"
+                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-base sm:text-xs text-zinc-200 outline-none focus:border-emerald-500 min-h-[40px]"
                     />
                     <button
                       onClick={submitChat}
                       disabled={chatLoading || !chatQuery.trim()}
-                      className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 text-zinc-950 disabled:text-zinc-500 font-bold px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer"
+                      className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 text-zinc-950 disabled:text-zinc-500 font-bold px-4 py-2 rounded-lg text-xs transition-all cursor-pointer min-h-[40px] flex items-center justify-center w-full sm:w-auto"
                     >
                       {chatLoading ? "Thinking..." : "Ask"}
                     </button>
