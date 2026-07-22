@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     NOTIFICATION_EMAIL: str = ""
+    RESEND_API_KEY: str = ""
+    BREVO_API_KEY: str = ""
+    SENDGRID_API_KEY: str = ""
+
 
     def get_connect_args(self, url: str) -> dict:
         """Dynamically generate connection arguments based on database URL host."""
